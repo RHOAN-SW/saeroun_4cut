@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Home from './components/Home';
 import CameraSettings from './components/CameraSettings';
 import Step1Guide from './components/Step1Guide';
+import StepPhotoSelect from './components/StepPhotoSelect';
 import StepFrameSelect from './components/StepFrameSelect';
 import Step2Camera from './components/Step2Camera';
 import Step3Preview from './components/Step3Preview';
@@ -25,9 +26,10 @@ const pageTransition = {
 };
 
 export default function App() {
-  const [step, setStep] = useState(0); // 0: Home, 1: Guide, 2: Camera, 3: Frame, 4: Preview, 5: QR
+  const [step, setStep] = useState(0); // 0: Home, 1: Guide, 2: Camera, 3: Photos, 4: Frame, 5: Preview, 6: QR
   const [showSettings, setShowSettings] = useState(false);
-  const [selectedFrame, setSelectedFrame] = useState('winning');
+  const [selectedFrame, setSelectedFrame] = useState('clean');
+  const [selectedFilter, setSelectedFilter] = useState('original');
   
   // Camera Settings State
   const [settings, setSettings] = useState({
@@ -39,6 +41,7 @@ export default function App() {
   });
 
   const [capturedPhotos, setCapturedPhotos] = useState(Array(settings.shots).fill(null));
+  const [selectedPhotos, setSelectedPhotos] = useState([]);
   const [qrData, setQrData] = useState(null);
 
   const updateSetting = (key, value) => {
@@ -47,6 +50,7 @@ export default function App() {
       if (key === 'shots') {
         // Adjust array size if shots count changes
         setCapturedPhotos(Array(value).fill(null));
+        setSelectedPhotos([]);
       }
       return next;
     });
@@ -54,6 +58,7 @@ export default function App() {
 
   const resetAll = () => {
     setCapturedPhotos(Array(settings.shots).fill(null));
+    setSelectedPhotos([]);
     setQrData(null);
     setStep(0);
   };
@@ -126,12 +131,16 @@ export default function App() {
               variants={pageVariants} transition={pageTransition}
               className="step-section active"
             >
-              <StepFrameSelect
-                selectedFrame={selectedFrame}
-                onSelect={setSelectedFrame}
-                onNext={() => setStep(4)}
+              <StepPhotoSelect
+                photos={capturedPhotos}
+                initialPhotos={selectedPhotos}
+                onNext={(photos) => {
+                  setSelectedPhotos(photos);
+                  setStep(4);
+                }}
                 onBack={() => {
                   setCapturedPhotos(Array(settings.shots).fill(null));
+                  setSelectedPhotos([]);
                   setStep(2);
                 }}
               />
@@ -145,25 +154,46 @@ export default function App() {
               variants={pageVariants} transition={pageTransition}
               className="step-section active"
             >
+              <StepFrameSelect
+                photos={selectedPhotos}
+                selectedFrame={selectedFrame}
+                selectedFilter={selectedFilter}
+                onSelect={setSelectedFrame}
+                onSelectFilter={setSelectedFilter}
+                onNext={() => setStep(5)}
+                onBack={() => setStep(3)}
+              />
+            </motion.div>
+          )}
+
+          {step === 5 && (
+            <motion.div
+              key="step5"
+              initial="initial" animate="in" exit="out"
+              variants={pageVariants} transition={pageTransition}
+              className="step-section active"
+            >
               <Step3Preview 
-                photos={capturedPhotos}
+                photos={selectedPhotos}
                 frameId={selectedFrame}
+                filterId={selectedFilter}
                 onRetake={() => {
                   setCapturedPhotos(Array(settings.shots).fill(null));
+                  setSelectedPhotos([]);
                   setStep(2);
                 }}
                 onShowQr={(data) => {
                   setQrData(data);
-                  setStep(5);
+                  setStep(6);
                 }}
                 onNewSession={resetAll}
               />
             </motion.div>
           )}
 
-          {step === 5 && qrData && (
+          {step === 6 && qrData && (
             <motion.div
-              key="step5"
+              key="step6"
               initial="initial" animate="in" exit="out"
               variants={pageVariants} transition={pageTransition}
               className="step-section active"

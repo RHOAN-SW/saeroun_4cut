@@ -1,10 +1,29 @@
 // src/utils/composer.js
 
 export const FRAME_OPTIONS = [
-  { id: 'winning', name: 'WINNING ALL', description: '2026 스페셜 프레임', preview: '/frames/custom_frame.png' },
-  { id: 'clean', name: '클린 화이트', description: '어디에나 잘 어울리는 기본' },
-  { id: 'mono', name: '모노 블랙', description: '선명하고 시크한 무드' },
+  { id: 'clean', name: '클린 화이트', color: '#ffffff' },
+  { id: 'mono', name: '모노 블랙', color: '#14171a' },
+  { id: 'winning', name: 'WINNING ALL', color: '#f4d56b', preview: '/frames/custom_frame.png' },
+  { id: 'sky', name: '스카이 블루', color: '#a9c9ff' },
+  { id: 'sage', name: '세이지 그린', color: '#c7d5b5' },
+  { id: 'peach', name: '피치 코랄', color: '#ffc7ae' },
 ];
+
+export const FILTER_OPTIONS = [
+  { id: 'original', name: '원본', swatch: 'linear-gradient(135deg,#f7f7f7,#d8dde3)' },
+  { id: 'warm', name: '따뜻하게', swatch: 'linear-gradient(135deg,#ffd2a5,#a56a43)' },
+  { id: 'cool', name: '시원하게', swatch: 'linear-gradient(135deg,#b9ddff,#536b91)' },
+  { id: 'mono', name: '흑백', swatch: 'linear-gradient(135deg,#f5f5f5,#252525)' },
+  { id: 'vivid', name: '선명하게', swatch: 'linear-gradient(135deg,#ff8f8f,#5a7dff)' },
+];
+
+const FILTER_MAP = {
+  original: 'none',
+  warm: 'sepia(.18) saturate(1.12) contrast(1.03)',
+  cool: 'saturate(.9) hue-rotate(8deg) contrast(1.04)',
+  mono: 'grayscale(1) contrast(1.08)',
+  vivid: 'saturate(1.28) contrast(1.05)',
+};
 
 export const LAYOUT = {
   canvasWidth: 1152,
@@ -80,12 +99,13 @@ function drawSimpleFrame(ctx, frameId, width, height) {
   ctx.fillText(new Date().toLocaleDateString('ko-KR'), width / 2, 1912);
 }
 
-export async function compose(canvas, photos, frameId = 'winning') {
+export async function compose(canvas, photos, frameId = 'clean', filterId = 'original') {
   const ctx = canvas.getContext('2d');
   canvas.width = LAYOUT.canvasWidth;
   canvas.height = LAYOUT.canvasHeight;
 
-  ctx.fillStyle = frameId === 'mono' ? '#14171a' : LAYOUT.backgroundColor;
+  const frame = FRAME_OPTIONS.find(option => option.id === frameId) || FRAME_OPTIONS[0];
+  ctx.fillStyle = frame.color || LAYOUT.backgroundColor;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
   const areas = LAYOUT.areas;
@@ -96,7 +116,9 @@ export async function compose(canvas, photos, frameId = 'winning') {
   for (let i = 0; i < 4; i++) {
     const area = areas[i];
     if (photoImages[i]) {
+      ctx.filter = FILTER_MAP[filterId] || 'none';
       drawImageCover(ctx, photoImages[i], area.x, area.y, area.width, area.height, LAYOUT.borderRadius);
+      ctx.filter = 'none';
     } else {
       ctx.fillStyle = '#e0e0e0';
       ctx.fillRect(area.x, area.y, area.width, area.height);
