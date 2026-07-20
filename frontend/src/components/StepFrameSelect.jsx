@@ -134,7 +134,7 @@ export default function StepFrameSelect({ selectedFrame, onSelect, onNext, onBac
   return (
     <Screen>
       <div className="topbar frame-topbar">
-        <button className="back-btn" onClick={onBack} aria-label="처음 화면으로">
+        <button className="back-btn" onClick={onBack} aria-label="다시 촬영하기">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="15 18 9 12 15 6" />
           </svg>
@@ -145,7 +145,7 @@ export default function StepFrameSelect({ selectedFrame, onSelect, onNext, onBac
 
       <Copy>
         <h1>오늘의 프레임을 골라주세요</h1>
-        <p>선택한 모습 그대로 저장하고 인화해요.</p>
+        <p>촬영한 사진에 선택한 프레임을 입혀 저장하고 인화해요.</p>
       </Copy>
 
       <FrameGrid>

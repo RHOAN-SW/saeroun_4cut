@@ -25,7 +25,7 @@ const pageTransition = {
 };
 
 export default function App() {
-  const [step, setStep] = useState(0); // 0: Home, 1: Guide, 2: Frame, 3: Camera, 4: Preview, 5: QR
+  const [step, setStep] = useState(0); // 0: Home, 1: Guide, 2: Camera, 3: Frame, 4: Preview, 5: QR
   const [showSettings, setShowSettings] = useState(false);
   const [selectedFrame, setSelectedFrame] = useState('winning');
   
@@ -109,10 +109,11 @@ export default function App() {
               variants={pageVariants} transition={pageTransition}
               className="step-section active"
             >
-              <StepFrameSelect
-                selectedFrame={selectedFrame}
-                onSelect={setSelectedFrame}
+              <Step2Camera
+                capturedPhotos={capturedPhotos}
+                setCapturedPhotos={setCapturedPhotos}
                 onNext={() => setStep(3)}
+                settings={settings}
                 onBack={() => setStep(0)}
               />
             </motion.div>
@@ -125,12 +126,14 @@ export default function App() {
               variants={pageVariants} transition={pageTransition}
               className="step-section active"
             >
-              <Step2Camera
-                capturedPhotos={capturedPhotos}
-                setCapturedPhotos={setCapturedPhotos}
+              <StepFrameSelect
+                selectedFrame={selectedFrame}
+                onSelect={setSelectedFrame}
                 onNext={() => setStep(4)}
-                settings={settings}
-                onBack={() => setStep(2)}
+                onBack={() => {
+                  setCapturedPhotos(Array(settings.shots).fill(null));
+                  setStep(2);
+                }}
               />
             </motion.div>
           )}
@@ -147,7 +150,7 @@ export default function App() {
                 frameId={selectedFrame}
                 onRetake={() => {
                   setCapturedPhotos(Array(settings.shots).fill(null));
-                  setStep(3);
+                  setStep(2);
                 }}
                 onShowQr={(data) => {
                   setQrData(data);
