@@ -12,3 +12,12 @@ dist/
 .wrangler/
 .DS_Store
 *.pem
+/public/favicon.svg
+/public/frames/
+/public/icon-192.png
+/public/icon-512.png
+/public/icons.svg
+/public/logo.png
+/public/manifest.webmanifest
+/public/og.png
+/public/sw.js
