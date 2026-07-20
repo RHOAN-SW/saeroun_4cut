@@ -32,9 +32,6 @@ export default function Home({ onStart, onOpenSettings }) {
         <button className="btn-black" onClick={onStart}>
           촬영하기
         </button>
-        <div className="counter-text">
-          촬영한 사진은 이 기기에서만 처리돼요
-        </div>
       </div>
     </div>
   );

@@ -3,7 +3,7 @@
 export const FRAME_OPTIONS = [
   { id: 'clean', name: '클린 화이트', color: '#ffffff' },
   { id: 'mono', name: '모노 블랙', color: '#14171a' },
-  { id: 'winning', name: 'WINNING ALL', color: '#f4d56b', preview: '/frames/custom_frame.png' },
+  { id: 'winning', name: 'WINNING ALL', color: '#f4d56b', preview: '/frames/frame_0001.png' },
   { id: 'sky', name: '스카이 블루', color: '#a9c9ff' },
   { id: 'sage', name: '세이지 그린', color: '#c7d5b5' },
   { id: 'peach', name: '피치 코랄', color: '#ffc7ae' },
@@ -127,7 +127,7 @@ export async function compose(canvas, photos, frameId = 'clean', filterId = 'ori
 
   if (frameId === 'winning') {
     try {
-      const frameImg = await loadImage('/frames/custom_frame.png');
+      const frameImg = await loadImage('/frames/frame_0001.png');
       ctx.drawImage(frameImg, 0, 0, canvas.width, canvas.height);
     } catch (e) {
       console.warn('Frame image load failed:', e);
@@ -145,7 +145,7 @@ export function canvasToBase64(canvas, quality = 0.92) {
 
 export function generateDefaultFrame() { return null; }
 export function generateFrameThumbnail(id) { 
-  if (id === 'no-frame') return '/frames/custom_frame.png';
-  // Use custom_frame.png for all as fallback to prevent broken images
-  return '/frames/custom_frame.png';
+  if (id === 'no-frame') return '/frames/frame_0001.png';
+  // Use the newly added frame image as the fallback preview
+  return '/frames/frame_0001.png';
 }
