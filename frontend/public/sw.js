@@ -1,4 +1,4 @@
-const CACHE_NAME = 'jr-fourcut-v1';
+const CACHE_NAME = 'jr-fourcut-v9';
 const APP_SHELL = ['/', '/manifest.webmanifest', '/logo.png', '/frames/custom_frame.png', '/icon-192.png', '/icon-512.png'];
 
 self.addEventListener('install', event => {
@@ -18,7 +18,7 @@ self.addEventListener('fetch', event => {
   if (event.request.method !== 'GET' || url.origin !== self.location.origin) return;
   if (url.pathname.startsWith('/api/') || url.pathname.startsWith('/download')) return;
   event.respondWith(
-    fetch(event.request)
+    fetch(event.request, { cache: 'no-store' })
       .then(response => {
         const copy = response.clone();
         caches.open(CACHE_NAME).then(cache => cache.put(event.request, copy));

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ThemeProvider } from '@emotion/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Home from './components/Home';
@@ -43,6 +43,20 @@ export default function App() {
   const [capturedPhotos, setCapturedPhotos] = useState(Array(settings.shots).fill(null));
   const [selectedPhotos, setSelectedPhotos] = useState([]);
   const [qrData, setQrData] = useState(null);
+
+  useEffect(() => {
+    // Remove legacy app-shell caches so an iPad home-screen install always receives the latest flow.
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(registrations => {
+        registrations.forEach(registration => registration.unregister());
+      }).catch(() => {});
+    }
+    if ('caches' in window) {
+      caches.keys().then(keys => Promise.all(
+        keys.filter(key => key.startsWith('jr-fourcut-')).map(key => caches.delete(key))
+      )).catch(() => {});
+    }
+  }, []);
 
   const updateSetting = (key, value) => {
     setSettings(prev => {
