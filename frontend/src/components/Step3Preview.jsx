@@ -3,12 +3,18 @@ import styled from '@emotion/styled';
 import { compose } from '../utils/composer';
 
 const ActionCard = styled.div`
-  width: min(720px, 100%);
-  margin: 22px auto 0;
+  width: min(620px, 100%);
+  margin: 12px auto 0;
   padding: 20px;
   border-radius: ${({ theme }) => theme.radius.card};
   background: ${({ theme }) => theme.colors.surface};
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+
+  @media (max-height: 760px) {
+    margin-top: 8px;
+    padding: 13px 15px;
+    border-radius: 18px;
+  }
 `;
 
 const PrintHeading = styled.div`
@@ -28,12 +34,20 @@ const PrintHeading = styled.div`
     font-size: 13px;
     line-height: 1.5;
   }
+
+  @media (max-height: 760px) {
+    margin-bottom: 10px;
+    strong { font-size: 17px; }
+    span { margin-top: 3px; font-size: 11px; line-height: 1.35; }
+  }
 `;
 
 const ActionStack = styled.div`
   display: flex;
   flex-direction: column;
   gap: 10px;
+
+  @media (max-height: 760px) { gap: 6px; }
 `;
 
 const ActionButton = styled.button`
@@ -73,6 +87,13 @@ const ActionButton = styled.button`
   &:disabled {
     cursor: default;
     opacity: 0.42;
+  }
+
+  @media (max-height: 760px) {
+    min-height: 46px;
+    padding: 10px 14px;
+    border-radius: 14px;
+    font-size: 14px;
   }
 `;
 

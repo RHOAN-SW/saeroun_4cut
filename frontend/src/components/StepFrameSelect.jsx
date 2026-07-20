@@ -21,6 +21,9 @@ const PreviewArea = styled.div`
 
   canvas {
     height: 100%;
+    width: auto;
+    aspect-ratio: 9 / 16;
+    object-fit: contain;
     max-height: 500px;
     max-width: 100%;
     border: 1px solid #c8cdd2;
