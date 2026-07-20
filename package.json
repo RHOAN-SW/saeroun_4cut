@@ -1,0 +1,45 @@
+{
+  "name": "photo-booth",
+  "version": "1.0.0",
+  "description": "네컷사진 부스 웹 앱 - iPad Photo Booth",
+  "main": "server.js",
+  "scripts": {
+    "start": "WRANGLER_LOG_PATH=.wrangler/wrangler.log vinext start",
+    "dev": "WRANGLER_LOG_PATH=.wrangler/wrangler.log vinext dev",
+    "dev:server": "node server.js",
+    "dev:client": "cd frontend && npm run dev",
+    "build:frontend": "cd frontend && npm run build",
+    "build": "WRANGLER_LOG_PATH=.wrangler/wrangler.log vinext build",
+    "install:client": "cd frontend && npm install"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.108.2",
+    "cors": "^2.8.5",
+    "dotenv": "^17.4.2",
+    "express": "^4.21.0",
+    "framer-motion": "^12.42.2",
+    "multer": "^1.4.5-lts.1",
+    "next": "16.2.6",
+    "pngjs": "^7.0.0",
+    "qrcode": "^1.5.4",
+    "react": "19.2.6",
+    "react-dom": "19.2.6",
+    "selfsigned": "^2.4.1",
+    "uuid": "^10.0.0"
+  },
+  "devDependencies": {
+    "@cloudflare/vite-plugin": "1.37.1",
+    "@types/node": "22.19.19",
+    "@types/react": "19.2.14",
+    "@types/react-dom": "19.2.3",
+    "@vitejs/plugin-react": "^6.0.2",
+    "@vitejs/plugin-rsc": "^0.5.26",
+    "concurrently": "^10.0.3",
+    "react-server-dom-webpack": "^19.2.6",
+    "typescript": "5.9.3",
+    "vinext": "0.0.50",
+    "vite": "8.0.13",
+    "wrangler": "4.92.0"
+  },
+  "type": "module"
+}

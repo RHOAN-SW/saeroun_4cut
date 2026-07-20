@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="description" content="네컷사진 부스 - 사진 다운로드">
+  <title>📸 사진 다운로드</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <div class="download-page">
+    <!-- 로딩 상태 -->
+    <div id="loading-state">
+      <div class="logo" style="font-size: 2rem; margin-bottom: 16px;">
+        <span class="logo-icon">📸</span>
+        <span>네컷사진 부스</span>
+      </div>
+      <p class="text-secondary">사진을 불러오는 중...</p>
+      <div class="loading-spinner"></div>
+    </div>
+
+    <!-- 사진 표시 -->
+    <div id="photo-state" class="hidden">
+      <div class="download-card glass-card">
+        <div class="logo" style="font-size: 1.4rem; margin-bottom: 12px; justify-content: center;">
+          <span class="logo-icon">📸</span>
+          <span>네컷사진 부스</span>
+        </div>
+
+        <div class="download-preview">
+          <img id="download-photo" src="" alt="네컷사진">
+        </div>
+
+        <div id="download-timer" class="download-timer"></div>
+
+        <a id="download-btn" class="btn btn-primary btn-lg" style="width: 100;" download>
+          <span class="btn-icon">💾</span>
+          사진 저장하기
+        </a>
+
+        <p style="color: var(--text-muted); font-size: 0.8rem; margin-top: 12px;">
+          버튼을 눌러 사진을 저장하세요
+        </p>
+      </div>
+    </div>
+
+    <!-- 만료 상태 -->
+    <div id="expired-state" class="hidden">
+      <div class="download-card glass-card">
+        <div class="expired-message">
+          <div class="expired-icon">⏰</div>
+          <h2 class="section-title" style="font-size: 1.5rem;">다운로드 기간 만료</h2>
+          <p style="color: var(--text-secondary); margin-top: 12px; line-height: 1.6;">
+            사진의 다운로드 기간이 만료되었습니다.<br>
+            부스에서 다시 촬영해주세요!
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 에러 상태 -->
+    <div id="error-state" class="hidden">
+      <div class="download-card glass-card">
+        <div class="expired-message">
+          <div class="expired-icon">😢</div>
+          <h2 class="section-title" style="font-size: 1.5rem;">사진을 찾을 수 없습니다</h2>
+          <p style="color: var(--text-secondary); margin-top: 12px; line-height: 1.6;">
+            잘못된 링크이거나 이미 삭제된 사진입니다.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      const params = new URLSearchParams(window.location.search);
+      const photoId = params.get('id');
+
+      if (!photoId) {
+        showState('error');
+        return;
+      }
+
+      try {
+        const res = await fetch(`/api/photo/${photoId}`);
+        const data = await res.json();
+
+        if (!res.ok || data.expired) {
+          showState(res.status === 410 ? 'expired' : 'error');
+          return;
+        }
+
+        // 사진 표시
+        const photo = document.getElementById('download-photo');
+        photo.src = data.imageUrl;
+
+        // 다운로드 버튼
+        const downloadBtn = document.getElementById('download-btn');
+        downloadBtn.href = `/api/download/${photoId}`;
+        downloadBtn.download = `photo-booth-${Date.now()}.jpg`;
+
+        // iOS Safari에서는 다운로드 속성이 안 먹으므로 별도 처리
+        downloadBtn.addEventListener('click', async (e) => {
+          e.preventDefault();
+          try {
+            const response = await fetch(`/api/download/${photoId}`);
+            const blob = await response.blob();
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `photo-booth-${Date.now()}.jpg`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+          } catch (err) {
+            // 폴백: 새 탭에서 열기
+            window.open(`/api/download/${photoId}`, '_blank');
+          }
+        });
+
+        // 타이머
+        const expiresAt = new Date(data.expiresAt);
+        const timerEl = document.getElementById('download-timer');
+
+        const timerInterval = setInterval(() => {
+          const now = new Date();
+          const remaining = Math.max(0, expiresAt - now);
+
+          if (remaining <= 0) {
+            timerEl.textContent = '만료됨';
+            clearInterval(timerInterval);
+            setTimeout(() => showState('expired'), 2000);
+            return;
+          }
+
+          const min = Math.floor(remaining / 60000);
+          const sec = Math.floor((remaining % 60000) / 1000);
+          timerEl.textContent = `⏳ 남은 시간: ${min}분 ${sec}초`;
+        }, 1000);
+
+        showState('photo');
+      } catch (error) {
+        console.error('사진 조회 실패:', error);
+        showState('error');
+      }
+    });
+
+    function showState(state) {
+      ['loading', 'photo', 'expired', 'error'].forEach(s => {
+        const el = document.getElementById(`${s}-state`);
+        if (el) {
+          el.classList.toggle('hidden', s !== state);
+        }
+      });
+    }
+  </script>
+</body>
+</html>
