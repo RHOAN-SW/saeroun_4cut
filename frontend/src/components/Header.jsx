@@ -4,7 +4,6 @@ export default function Header({ currentStep }) {
   return (
     <header className="header">
       <div className="logo">
-        <span className="logo-icon">📸</span>
         <span>네컷사진 부스</span>
       </div>
       <div className="step-indicator">

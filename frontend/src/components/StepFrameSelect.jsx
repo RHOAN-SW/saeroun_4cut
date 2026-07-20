@@ -28,7 +28,6 @@ const PreviewArea = styled.div`
     max-width: 100%;
     border: 1px solid #c8cdd2;
     background: #fff;
-    box-shadow: 0 8px 24px rgba(0,0,0,.06);
   }
 `;
 
@@ -74,7 +73,7 @@ const AllPill = styled.span`
   align-items: center;
   height: 28px;
   padding: 0 13px;
-  border-radius: 14px;
+  border-radius: 2px;
   background: #000;
   color: #fff;
   font-size: 12px;
@@ -99,7 +98,8 @@ const CircleOption = styled.button`
   border: 2px solid ${({ $selected }) => $selected ? '#111' : '#b8bec5'};
   border-radius: 50%;
   background: ${({ $background }) => $background};
-  box-shadow: ${({ $selected }) => $selected ? '0 0 0 3px #fff, 0 0 0 5px #111' : 'none'};
+  outline: ${({ $selected }) => $selected ? '2px solid #111' : 'none'};
+  outline-offset: 2px;
   transition: transform 120ms ease;
 
   &:active { transform: scale(.94); }
@@ -115,7 +115,7 @@ const NextButton = styled.button`
   width: 100%;
   min-height: 56px;
   border: 0;
-  border-radius: 10px;
+  border-radius: 4px;
   background: #000;
   color: #fff;
   font: inherit;

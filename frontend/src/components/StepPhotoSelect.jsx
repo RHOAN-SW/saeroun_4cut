@@ -70,7 +70,7 @@ const PhotoButton = styled.button`
   overflow: hidden;
   padding: 0;
   border: 3px solid ${({ $selected }) => $selected ? '#111' : 'transparent'};
-  border-radius: 10px;
+  border-radius: 2px;
   background: #e5e5e5;
   transition: transform 120ms ease, border-color 120ms ease;
 
@@ -101,7 +101,7 @@ const NextButton = styled.button`
   width: 100%;
   min-height: 58px;
   border: 0;
-  border-radius: 9px;
+  border-radius: 4px;
   background: #000;
   color: #fff;
   font: inherit;

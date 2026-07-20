@@ -29,7 +29,6 @@ export default function Home({ onStart, onOpenSettings }) {
       </div>
 
       <div className="action-bottom">
-        <p className="home-kicker">iPad photo booth</p>
         <button className="btn-black" onClick={onStart}>
           촬영하기
         </button>

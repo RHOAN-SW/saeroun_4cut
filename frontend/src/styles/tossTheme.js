@@ -9,7 +9,7 @@ export const tossTheme = {
     soft: '#eef1f4',
   },
   radius: {
-    card: '24px',
-    button: '18px',
+    card: '4px',
+    button: '4px',
   },
 };

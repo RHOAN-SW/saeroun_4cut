@@ -8,12 +8,12 @@ const ActionCard = styled.div`
   padding: 20px;
   border-radius: ${({ theme }) => theme.radius.card};
   background: ${({ theme }) => theme.colors.surface};
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+  border: 1px solid #e5e8eb;
 
   @media (max-height: 760px) {
     margin-top: 8px;
     padding: 13px 15px;
-    border-radius: 18px;
+    border-radius: 4px;
   }
 `;
 
@@ -92,7 +92,7 @@ const ActionButton = styled.button`
   @media (max-height: 760px) {
     min-height: 46px;
     padding: 10px 14px;
-    border-radius: 14px;
+    border-radius: 4px;
     font-size: 14px;
   }
 `;
