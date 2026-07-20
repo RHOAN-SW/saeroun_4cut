@@ -530,6 +530,42 @@ body { min-height: 100dvh; }
 .text-button { border: 0; background: transparent; padding: 12px; color: #777; font-weight: 600; }
 .save-notice { color: #555; text-align: center; font-size: 13px; line-height: 1.5; }
 
+.qr-screen {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: calc(32px + env(safe-area-inset-top)) 24px calc(32px + env(safe-area-inset-bottom));
+  background: #f7f7f7;
+}
+.qr-copy { text-align: center; margin-bottom: 28px; }
+.qr-copy h2 { margin: 8px 0 10px; font-size: 26px; }
+.qr-copy p { color: #666; font-size: 14px; line-height: 1.55; }
+.qr-eyebrow { color: #777; font-size: 11px; font-weight: 800; letter-spacing: .16em; }
+.qr-card { padding: 20px; border-radius: 20px; background: #fff; box-shadow: 0 14px 42px rgba(0,0,0,.1); }
+.qr-card svg { display: block; }
+.qr-timer { display: flex; flex-direction: column; align-items: center; margin: 26px 0; }
+.qr-timer strong { font-size: 34px; font-variant-numeric: tabular-nums; }
+.qr-timer span { margin-top: 4px; color: #888; font-size: 12px; }
+.qr-home-button { width: min(500px, 100%); }
+
+.download-page {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 28px 20px calc(32px + env(safe-area-inset-bottom));
+  background: #f7f7f7;
+}
+.download-brand { margin-bottom: 18px; font-size: 12px; font-weight: 800; letter-spacing: .16em; }
+.download-brand span { color: #ff5a00; }
+.download-photo { width: min(420px, 88vw); max-height: 70dvh; object-fit: contain; border-radius: 8px; box-shadow: 0 14px 42px rgba(0,0,0,.12); }
+.download-button { width: min(420px, 88vw); margin-top: 20px; }
+.download-help, .download-message { margin-top: 12px; color: #777; font-size: 13px; text-align: center; }
+
 button:disabled { cursor: default; opacity: .45; }
 
 @media (display-mode: standalone) {

@@ -94,7 +94,7 @@ export default function Step1Guide({ onNext, onBack }) {
               <div style={{ width: '48px', height: '48px', borderRadius: '16px', background: '#f1f3f5', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                 <span style={{ fontSize: '20px' }}>📱</span>
               </div>
-              <span style={{ fontSize: '15px', fontWeight: '500' }}>완성된 네컷은 사진 앱 또는 파일에 저장할 수 있어요.</span>
+              <span style={{ fontSize: '15px', fontWeight: '500' }}>완성된 네컷은 QR로 받거나 이 iPad에 바로 저장할 수 있어요.</span>
             </li>
 
           </ul>

@@ -69,7 +69,7 @@ export default function CameraSettings({ onClose, settings, updateSetting }) {
           </div>
         </div>
 
-        <p className="privacy-note">사진은 서버에 업로드되지 않고 이 iPad 안에서만 합성됩니다.</p>
+        <p className="privacy-note">사진은 이 iPad에서 합성되고, QR을 만들 때만 완성본 한 장이 Supabase에 10분 동안 저장됩니다.</p>
       </div>
     </div>
   );

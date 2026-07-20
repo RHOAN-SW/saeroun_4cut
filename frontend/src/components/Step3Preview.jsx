@@ -13,12 +13,13 @@ const canvasToBlob = (canvas) => new Promise((resolve, reject) => {
   }, 'image/jpeg', 0.95);
 });
 
-export default function Step3Preview({ photos, onRetake, onNewSession }) {
+export default function Step3Preview({ photos, onRetake, onNewSession, onShowQr }) {
   const canvasRef = useRef(null);
   const availablePhotos = useMemo(() => photos.filter(Boolean), [photos]);
   const [selectedIndexes, setSelectedIndexes] = useState(() => availablePhotos.slice(0, 4).map((_, index) => index));
   const [isComposing, setIsComposing] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const [notice, setNotice] = useState('');
 
   const selectedPhotos = useMemo(
@@ -87,6 +88,27 @@ export default function Step3Preview({ photos, onRetake, onNewSession }) {
     }
   };
 
+  const handleCreateQr = async () => {
+    if (!canvasRef.current || isComposing || isUploading || selectedPhotos.length !== 4) return;
+    setIsUploading(true);
+    setNotice('');
+
+    try {
+      const blob = await canvasToBlob(canvasRef.current);
+      const formData = new FormData();
+      formData.append('photo', blob, makeFileName());
+      const response = await fetch('/api/upload', { method: 'POST', body: formData });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data?.error || '업로드 실패');
+      onShowQr(data);
+    } catch (error) {
+      console.error(error);
+      setNotice('QR을 만들지 못했어요. 인터넷 연결을 확인하고 다시 시도해주세요.');
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
   return (
     <div className="result-screen">
       <div className="topbar">
@@ -133,11 +155,14 @@ export default function Step3Preview({ photos, onRetake, onNewSession }) {
         )}
 
         <div className="result-actions">
-          <button className="btn-black" onClick={handleSave} disabled={isComposing || isSaving || selectedPhotos.length !== 4}>
-            {isSaving ? '저장 준비 중...' : '사진 저장하기'}
+          <button className="btn-black" onClick={handleCreateQr} disabled={isComposing || isSaving || isUploading || selectedPhotos.length !== 4}>
+            {isUploading ? 'QR 만드는 중...' : 'QR 다운로드 만들기'}
           </button>
-          <button className="btn-light" onClick={onRetake} disabled={isSaving}>다시 촬영하기</button>
-          <button className="text-button" onClick={onNewSession} disabled={isSaving}>처음으로</button>
+          <button className="btn-light" onClick={handleSave} disabled={isComposing || isSaving || isUploading || selectedPhotos.length !== 4}>
+            {isSaving ? '저장 준비 중...' : '이 iPad에 바로 저장'}
+          </button>
+          <button className="btn-light" onClick={onRetake} disabled={isSaving || isUploading}>다시 촬영하기</button>
+          <button className="text-button" onClick={onNewSession} disabled={isSaving || isUploading}>처음으로</button>
           {notice && <p className="save-notice" role="status">{notice}</p>}
         </div>
       </div>

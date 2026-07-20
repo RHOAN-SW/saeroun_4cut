@@ -7,6 +7,7 @@ import CameraSettings from './components/CameraSettings';
 import Step1Guide from './components/Step1Guide';
 import Step2Camera from './components/Step2Camera';
 import Step3Preview from './components/Step3Preview';
+import Step4QR from './components/Step4QR';
 
 const pageVariants = {
   initial: { opacity: 0, y: 20 },
@@ -21,7 +22,7 @@ const pageTransition = {
 };
 
 export default function App() {
-  const [step, setStep] = useState(0); // 0: Home, 1: Guide, 2: Camera, 3: Preview
+  const [step, setStep] = useState(0); // 0: Home, 1: Guide, 2: Camera, 3: Preview, 4: QR
   const [showSettings, setShowSettings] = useState(false);
   
   // Camera Settings State
@@ -34,6 +35,7 @@ export default function App() {
   });
 
   const [capturedPhotos, setCapturedPhotos] = useState(Array(settings.shots).fill(null));
+  const [qrData, setQrData] = useState(null);
 
   const updateSetting = (key, value) => {
     setSettings(prev => {
@@ -48,6 +50,7 @@ export default function App() {
 
   const resetAll = () => {
     setCapturedPhotos(Array(settings.shots).fill(null));
+    setQrData(null);
     setStep(0);
   };
 
@@ -124,8 +127,23 @@ export default function App() {
                   setCapturedPhotos(Array(settings.shots).fill(null));
                   setStep(2);
                 }}
+                onShowQr={(data) => {
+                  setQrData(data);
+                  setStep(4);
+                }}
                 onNewSession={resetAll}
               />
+            </motion.div>
+          )}
+
+          {step === 4 && qrData && (
+            <motion.div
+              key="step4"
+              initial="initial" animate="in" exit="out"
+              variants={pageVariants} transition={pageTransition}
+              className="step-section active"
+            >
+              <Step4QR qrData={qrData} onNewSession={resetAll} />
             </motion.div>
           )}
         </AnimatePresence>
