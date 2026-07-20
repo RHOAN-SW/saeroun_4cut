@@ -1,10 +1,15 @@
 import { NextResponse } from 'next/server';
 import { getSupabase, removeExpiredPhotos } from '@/lib/supabase-server';
+import { hasValidBoothSession } from '@/lib/booth-auth';
 
 const MAX_FILE_SIZE = 15 * 1024 * 1024;
 
 export async function POST(request: Request) {
   try {
+    if (!await hasValidBoothSession(request)) {
+      return NextResponse.json({ error: '스튜디오 로그인이 필요합니다.' }, { status: 401 });
+    }
+
     const formData = await request.formData();
     const photo = formData.get('photo');
     if (!(photo instanceof File)) return NextResponse.json({ error: '사진 파일이 없습니다.' }, { status: 400 });
@@ -46,6 +51,8 @@ export async function POST(request: Request) {
     }, { headers: { 'Cache-Control': 'no-store' } });
   } catch (error) {
     console.error('Photo upload failed', error);
-    return NextResponse.json({ error: '사진 업로드에 실패했습니다.' }, { status: 500 });
+    const message = error instanceof Error ? error.message : '';
+    const hint = message.includes('환경 변수') ? '서버 설정을 확인해주세요.' : '잠시 후 다시 시도해주세요.';
+    return NextResponse.json({ error: `사진 업로드에 실패했습니다. ${hint}` }, { status: 500 });
   }
 }
