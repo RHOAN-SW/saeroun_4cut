@@ -94,7 +94,7 @@ const canvasToBlob = (canvas) => new Promise((resolve, reject) => {
   }, 'image/jpeg', 0.95);
 });
 
-export default function Step3Preview({ photos, onRetake, onNewSession, onShowQr }) {
+export default function Step3Preview({ photos, frameId, onRetake, onNewSession, onShowQr }) {
   const canvasRef = useRef(null);
   const availablePhotos = useMemo(() => photos.filter(Boolean), [photos]);
   const [selectedIndexes, setSelectedIndexes] = useState(() => availablePhotos.slice(0, 4).map((_, index) => index));
@@ -113,12 +113,12 @@ export default function Step3Preview({ photos, onRetake, onNewSession, onShowQr 
     let active = true;
     const runCompose = async () => {
       setIsComposing(true);
-      if (canvasRef.current) await compose(canvasRef.current, selectedPhotos);
+      if (canvasRef.current) await compose(canvasRef.current, selectedPhotos, frameId);
       if (active) setIsComposing(false);
     };
     runCompose().catch(() => active && setNotice('미리보기를 만들지 못했어요. 다시 촬영해주세요.'));
     return () => { active = false; };
-  }, [selectedPhotos]);
+  }, [selectedPhotos, frameId]);
 
   const togglePhoto = (index) => {
     setNotice('');
@@ -258,6 +258,7 @@ export default function Step3Preview({ photos, onRetake, onNewSession, onShowQr 
           <canvas ref={canvasRef} className={isComposing ? 'is-hidden' : ''} />
         </section>
 
+        <div className="result-controls">
         {availablePhotos.length > 4 && (
           <section className="photo-picker">
             <div className="picker-heading">
@@ -306,6 +307,7 @@ export default function Step3Preview({ photos, onRetake, onNewSession, onShowQr 
           {notice && <p className="save-notice" role="status">{notice}</p>}
           </ActionStack>
         </ActionCard>
+        </div>
       </div>
     </div>
   );

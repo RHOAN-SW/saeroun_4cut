@@ -1,5 +1,11 @@
 // src/utils/composer.js
 
+export const FRAME_OPTIONS = [
+  { id: 'winning', name: 'WINNING ALL', description: '2026 스페셜 프레임', preview: '/frames/custom_frame.png' },
+  { id: 'clean', name: '클린 화이트', description: '어디에나 잘 어울리는 기본' },
+  { id: 'mono', name: '모노 블랙', description: '선명하고 시크한 무드' },
+];
+
 export const LAYOUT = {
   canvasWidth: 1152,
   canvasHeight: 2048,
@@ -60,12 +66,26 @@ function drawImageCover(ctx, img, x, y, w, h, radius = 0) {
   ctx.restore();
 }
 
-export async function compose(canvas, photos) {
+function drawSimpleFrame(ctx, frameId, width, height) {
+  const isMono = frameId === 'mono';
+  ctx.fillStyle = isMono ? '#ffffff' : '#191f28';
+  ctx.textAlign = 'center';
+  ctx.font = '800 62px -apple-system, BlinkMacSystemFont, sans-serif';
+  ctx.fillText('JR SELF STUDIO', width / 2, 1770);
+  ctx.font = '500 26px -apple-system, BlinkMacSystemFont, sans-serif';
+  ctx.letterSpacing = '5px';
+  ctx.fillText('FOUR MOMENTS, ONE FRAME', width / 2, 1832);
+  ctx.fillStyle = isMono ? '#9aa2aa' : '#8b95a1';
+  ctx.font = '500 22px -apple-system, BlinkMacSystemFont, sans-serif';
+  ctx.fillText(new Date().toLocaleDateString('ko-KR'), width / 2, 1912);
+}
+
+export async function compose(canvas, photos, frameId = 'winning') {
   const ctx = canvas.getContext('2d');
   canvas.width = LAYOUT.canvasWidth;
   canvas.height = LAYOUT.canvasHeight;
 
-  ctx.fillStyle = LAYOUT.backgroundColor;
+  ctx.fillStyle = frameId === 'mono' ? '#14171a' : LAYOUT.backgroundColor;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
   const areas = LAYOUT.areas;
@@ -83,11 +103,15 @@ export async function compose(canvas, photos) {
     }
   }
 
-  try {
-    const frameImg = await loadImage('/frames/custom_frame.png');
-    ctx.drawImage(frameImg, 0, 0, canvas.width, canvas.height);
-  } catch (e) {
-    console.warn('Frame image load failed:', e);
+  if (frameId === 'winning') {
+    try {
+      const frameImg = await loadImage('/frames/custom_frame.png');
+      ctx.drawImage(frameImg, 0, 0, canvas.width, canvas.height);
+    } catch (e) {
+      console.warn('Frame image load failed:', e);
+    }
+  } else {
+    drawSimpleFrame(ctx, frameId, canvas.width, canvas.height);
   }
 
   return canvas;
