@@ -1,13 +1,13 @@
 // src/utils/composer.js
 
 export const LAYOUT = {
-  canvasWidth: 576,
-  canvasHeight: 1024,
+  canvasWidth: 1152,
+  canvasHeight: 2048,
   areas: [
-    { x: 35, y: 42, width: 246, height: 366 },
-    { x: 295, y: 42, width: 246, height: 366 },
-    { x: 35, y: 421, width: 246, height: 367 },
-    { x: 295, y: 421, width: 246, height: 367 }
+    { x: 70, y: 84, width: 492, height: 732 },
+    { x: 590, y: 84, width: 492, height: 732 },
+    { x: 70, y: 842, width: 492, height: 734 },
+    { x: 590, y: 842, width: 492, height: 734 }
   ],
   borderRadius: 0,
   backgroundColor: '#ffffff'

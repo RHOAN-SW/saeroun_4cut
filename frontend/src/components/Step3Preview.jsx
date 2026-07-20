@@ -1,5 +1,86 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import styled from '@emotion/styled';
 import { compose } from '../utils/composer';
+
+const ActionCard = styled.div`
+  width: min(720px, 100%);
+  margin: 22px auto 0;
+  padding: 20px;
+  border-radius: ${({ theme }) => theme.radius.card};
+  background: ${({ theme }) => theme.colors.surface};
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+`;
+
+const PrintHeading = styled.div`
+  margin-bottom: 16px;
+
+  strong {
+    display: block;
+    color: ${({ theme }) => theme.colors.text};
+    font-size: 20px;
+    line-height: 1.35;
+  }
+
+  span {
+    display: block;
+    margin-top: 6px;
+    color: ${({ theme }) => theme.colors.secondaryText};
+    font-size: 13px;
+    line-height: 1.5;
+  }
+`;
+
+const ActionStack = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+`;
+
+const ActionButton = styled.button`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  width: 100%;
+  min-height: 58px;
+  padding: 16px 18px;
+  border: 0;
+  border-radius: ${({ theme }) => theme.radius.button};
+  background: ${({ $tone, theme }) => (
+    $tone === 'print' ? theme.colors.accent
+      : $tone === 'dark' ? theme.colors.primary
+        : theme.colors.soft
+  )};
+  color: ${({ $tone, theme }) => ($tone === 'soft' ? theme.colors.text : '#fff')};
+  font: inherit;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 120ms ease, filter 120ms ease, opacity 120ms ease;
+  -webkit-user-select: none;
+  user-select: none;
+
+  &:active:not(:disabled) {
+    transform: scale(0.975);
+    filter: brightness(0.94);
+  }
+
+  &:focus-visible {
+    outline: 3px solid rgba(255, 90, 0, 0.24);
+    outline-offset: 2px;
+  }
+
+  &:disabled {
+    cursor: default;
+    opacity: 0.42;
+  }
+`;
+
+const PrintIcon = () => (
+  <svg width="21" height="21" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <path d="M7 8V3h10v5M7 17H5a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2M7 14h10v7H7v-7Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
 
 const makeFileName = () => {
   const stamp = new Date().toISOString().replace(/[:.]/g, '-');
@@ -20,6 +101,7 @@ export default function Step3Preview({ photos, onRetake, onNewSession, onShowQr 
   const [isComposing, setIsComposing] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [isPrinting, setIsPrinting] = useState(false);
   const [notice, setNotice] = useState('');
 
   const selectedPhotos = useMemo(
@@ -109,6 +191,55 @@ export default function Step3Preview({ photos, onRetake, onNewSession, onShowQr 
     }
   };
 
+  const handlePrint = () => {
+    if (!canvasRef.current || isComposing || isPrinting || selectedPhotos.length !== 4) return;
+
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      setNotice('인쇄 화면을 열 수 없어요. Safari의 팝업 차단을 확인해주세요.');
+      return;
+    }
+
+    setIsPrinting(true);
+    setNotice('AirPrint 창에서 Canon SELPHY CP1500을 선택해주세요.');
+
+    const imageUrl = canvasRef.current.toDataURL('image/jpeg', 0.98);
+    printWindow.document.open();
+    printWindow.document.write(`<!doctype html>
+      <html lang="ko">
+        <head>
+          <meta name="viewport" content="width=device-width, initial-scale=1">
+          <title>JR 네컷 인쇄</title>
+          <style>
+            @page { size: 4in 6in; margin: 0; }
+            * { box-sizing: border-box; }
+            html, body { width: 4in; height: 6in; margin: 0; background: #fff; }
+            body { display: grid; place-items: center; overflow: hidden; }
+            img { display: block; width: 3.375in; height: 6in; object-fit: contain; }
+            .fallback { display: none; }
+            @media screen {
+              html, body { width: 100%; min-height: 100%; height: auto; background: #f2f4f6; }
+              body { padding: 24px; }
+              img { width: min(420px, 88vw); height: auto; box-shadow: 0 12px 36px rgba(0,0,0,.14); }
+              .fallback { position: fixed; right: 20px; bottom: 20px; display: block; border: 0; border-radius: 16px; padding: 15px 20px; background: #ff5a00; color: #fff; font: 700 16px -apple-system, sans-serif; }
+            }
+          </style>
+        </head>
+        <body>
+          <img src="${imageUrl}" alt="완성된 네컷 사진">
+          <button class="fallback" onclick="window.print()">인쇄 창 다시 열기</button>
+          <script>
+            const photo = document.querySelector('img');
+            const openPrint = () => setTimeout(() => { window.focus(); window.print(); }, 180);
+            photo.complete ? openPrint() : photo.addEventListener('load', openPrint, { once: true });
+          <\/script>
+        </body>
+      </html>`);
+    printWindow.document.close();
+
+    window.setTimeout(() => setIsPrinting(false), 900);
+  };
+
   return (
     <div className="result-screen">
       <div className="topbar">
@@ -154,17 +285,27 @@ export default function Step3Preview({ photos, onRetake, onNewSession, onShowQr 
           </section>
         )}
 
-        <div className="result-actions">
-          <button className="btn-black" onClick={handleCreateQr} disabled={isComposing || isSaving || isUploading || selectedPhotos.length !== 4}>
+        <ActionCard>
+          <PrintHeading>
+            <strong>바로 인화할까요?</strong>
+            <span>CP1500과 같은 Wi-Fi에 연결한 뒤 AirPrint에서 프린터를 선택해주세요.</span>
+          </PrintHeading>
+          <ActionStack>
+          <ActionButton $tone="print" onClick={handlePrint} disabled={isComposing || isSaving || isUploading || isPrinting || selectedPhotos.length !== 4}>
+            <PrintIcon />
+            {isPrinting ? '인쇄 화면 여는 중...' : 'CP1500으로 출력'}
+          </ActionButton>
+          <ActionButton $tone="dark" onClick={handleCreateQr} disabled={isComposing || isSaving || isUploading || isPrinting || selectedPhotos.length !== 4}>
             {isUploading ? 'QR 만드는 중...' : 'QR 다운로드 만들기'}
-          </button>
-          <button className="btn-light" onClick={handleSave} disabled={isComposing || isSaving || isUploading || selectedPhotos.length !== 4}>
+          </ActionButton>
+          <ActionButton $tone="soft" onClick={handleSave} disabled={isComposing || isSaving || isUploading || isPrinting || selectedPhotos.length !== 4}>
             {isSaving ? '저장 준비 중...' : '이 iPad에 바로 저장'}
-          </button>
-          <button className="btn-light" onClick={onRetake} disabled={isSaving || isUploading}>다시 촬영하기</button>
-          <button className="text-button" onClick={onNewSession} disabled={isSaving || isUploading}>처음으로</button>
+          </ActionButton>
+          <ActionButton $tone="soft" onClick={onRetake} disabled={isSaving || isUploading || isPrinting}>다시 촬영하기</ActionButton>
+          <button className="text-button" onClick={onNewSession} disabled={isSaving || isUploading || isPrinting}>처음으로</button>
           {notice && <p className="save-notice" role="status">{notice}</p>}
-        </div>
+          </ActionStack>
+        </ActionCard>
       </div>
     </div>
   );

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { ThemeProvider } from '@emotion/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Home from './components/Home';
 import CameraSettings from './components/CameraSettings';
@@ -8,6 +9,7 @@ import Step1Guide from './components/Step1Guide';
 import Step2Camera from './components/Step2Camera';
 import Step3Preview from './components/Step3Preview';
 import Step4QR from './components/Step4QR';
+import { tossTheme } from './styles/tossTheme';
 
 const pageVariants = {
   initial: { opacity: 0, y: 20 },
@@ -55,7 +57,8 @@ export default function App() {
   };
 
   return (
-    <div id="app">
+    <ThemeProvider theme={tossTheme}>
+      <div id="app">
       {/* Modals outside main AnimatePresence */}
         {showSettings && (
           <div style={{ position: 'absolute', inset: 0, zIndex: 50 }}>
@@ -148,6 +151,7 @@ export default function App() {
           )}
         </AnimatePresence>
       </main>
-    </div>
+      </div>
+    </ThemeProvider>
   );
 }
