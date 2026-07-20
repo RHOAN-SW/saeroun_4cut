@@ -181,7 +181,6 @@ export default function Step3Preview({ photos, frameId, onRetake, onNewSession, 
       formData.append('photo', blob, makeFileName());
       const response = await fetch('/api/upload', { method: 'POST', body: formData });
       const data = await response.json();
-      if (response.status === 401) throw new Error('로그인이 만료됐어요. 앱을 다시 열어주세요.');
       if (!response.ok) throw new Error(data?.error || '업로드 실패');
       onShowQr(data);
     } catch (error) {

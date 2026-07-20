@@ -1,15 +1,10 @@
 import { NextResponse } from 'next/server';
 import { getSupabase, removeExpiredPhotos } from '@/lib/supabase-server';
-import { hasValidBoothSession } from '@/lib/booth-auth';
 
 const MAX_FILE_SIZE = 15 * 1024 * 1024;
 
 export async function POST(request: Request) {
   try {
-    if (!await hasValidBoothSession(request)) {
-      return NextResponse.json({ error: '스튜디오 로그인이 필요합니다.' }, { status: 401 });
-    }
-
     const formData = await request.formData();
     const photo = formData.get('photo');
     if (!(photo instanceof File)) return NextResponse.json({ error: '사진 파일이 없습니다.' }, { status: 400 });
