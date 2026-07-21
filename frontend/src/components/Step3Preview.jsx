@@ -3,17 +3,15 @@ import styled from '@emotion/styled';
 import { compose } from '../utils/composer';
 
 const ActionCard = styled.div`
-  width: min(620px, 100%);
-  margin: 12px auto 0;
-  padding: 20px;
-  border-radius: ${({ theme }) => theme.radius.card};
+  width: 100vw;
+  margin: 12px calc(50% - 50vw) -24px;
+  padding: 20px clamp(20px, 5vw, 56px) calc(20px + env(safe-area-inset-bottom));
   background: ${({ theme }) => theme.colors.surface};
-  border: 1px solid #e5e8eb;
+  border-top: 1px solid #e5e8eb;
 
   @media (max-height: 760px) {
     margin-top: 8px;
-    padding: 13px 15px;
-    border-radius: 4px;
+    padding: 13px 20px calc(13px + env(safe-area-inset-bottom));
   }
 `;
 
