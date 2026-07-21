@@ -95,6 +95,62 @@ const ActionButton = styled.button`
   }
 `;
 
+const PrintModalBackdrop = styled.div`
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(0, 0, 0, 0.5);
+`;
+
+const PrintModal = styled.section`
+  width: min(520px, 100%);
+  max-height: calc(100dvh - 48px);
+  overflow-y: auto;
+  padding: 24px;
+  border-radius: 8px;
+  background: #fff;
+
+  h2 {
+    margin: 0;
+    color: #191f28;
+    font-size: 24px;
+    line-height: 1.35;
+  }
+
+  p {
+    margin: 8px 0 20px;
+    color: #6b7684;
+    font-size: 14px;
+    line-height: 1.55;
+  }
+`;
+
+const PrintModalPhoto = styled.div`
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: #f2f4f6;
+
+  img {
+    display: block;
+    width: auto;
+    max-width: 100%;
+    max-height: 50dvh;
+    aspect-ratio: 9 / 16;
+    object-fit: contain;
+  }
+`;
+
+const PrintModalActions = styled.div`
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 10px;
+  margin-top: 18px;
+`;
+
 const PrintIcon = () => (
   <svg width="21" height="21" viewBox="0 0 24 24" fill="none" aria-hidden="true">
     <path d="M7 8V3h10v5M7 17H5a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2M7 14h10v7H7v-7Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -121,6 +177,7 @@ export default function Step3Preview({ photos, frameId, filterId, onRetake, onNe
   const [isSaving, setIsSaving] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [isPrinting, setIsPrinting] = useState(false);
+  const [printImageUrl, setPrintImageUrl] = useState('');
   const [notice, setNotice] = useState('');
 
   const selectedPhotos = useMemo(
@@ -138,6 +195,15 @@ export default function Step3Preview({ photos, frameId, filterId, onRetake, onNe
     runCompose().catch(() => active && setNotice('미리보기를 만들지 못했어요. 다시 촬영해주세요.'));
     return () => { active = false; };
   }, [selectedPhotos, frameId, filterId]);
+
+  useEffect(() => {
+    if (!printImageUrl) return undefined;
+    const closeOnEscape = event => {
+      if (event.key === 'Escape' && !isPrinting) setPrintImageUrl('');
+    };
+    window.addEventListener('keydown', closeOnEscape);
+    return () => window.removeEventListener('keydown', closeOnEscape);
+  }, [printImageUrl, isPrinting]);
 
   const togglePhoto = (index) => {
     setNotice('');
@@ -212,55 +278,68 @@ export default function Step3Preview({ photos, frameId, filterId, onRetake, onNe
 
   const handlePrint = () => {
     if (!canvasRef.current || isComposing || isPrinting || selectedPhotos.length !== 4) return;
+    setNotice('');
+    setPrintImageUrl(canvasRef.current.toDataURL('image/jpeg', 0.98));
+  };
 
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) {
-      setNotice('인쇄 화면을 열 수 없어요. Safari의 팝업 차단을 확인해주세요.');
-      return;
-    }
-
+  const confirmPrint = () => {
     setIsPrinting(true);
     setNotice('AirPrint 창에서 Canon SELPHY CP1500을 선택해주세요.');
-
-    const imageUrl = canvasRef.current.toDataURL('image/jpeg', 0.98);
-    printWindow.document.open();
-    printWindow.document.write(`<!doctype html>
-      <html lang="ko">
-        <head>
-          <meta name="viewport" content="width=device-width, initial-scale=1">
-          <title>JR 네컷 인쇄</title>
-          <style>
-            @page { size: 4in 6in; margin: 0; }
-            * { box-sizing: border-box; }
-            html, body { width: 4in; height: 6in; margin: 0; background: #fff; }
-            body { display: grid; place-items: center; overflow: hidden; }
-            img { display: block; width: 3.375in; height: 6in; object-fit: contain; }
-            .fallback { display: none; }
-            @media screen {
-              html, body { width: 100%; min-height: 100%; height: auto; background: #f2f4f6; }
-              body { padding: 24px; }
-              img { width: min(420px, 88vw); height: auto; box-shadow: 0 12px 36px rgba(0,0,0,.14); }
-              .fallback { position: fixed; right: 20px; bottom: 20px; display: block; border: 0; border-radius: 16px; padding: 15px 20px; background: #ff5a00; color: #fff; font: 700 16px -apple-system, sans-serif; }
-            }
-          </style>
-        </head>
-        <body>
-          <img src="${imageUrl}" alt="완성된 네컷 사진">
-          <button class="fallback" onclick="window.print()">인쇄 창 다시 열기</button>
-          <script>
-            const photo = document.querySelector('img');
-            const openPrint = () => setTimeout(() => { window.focus(); window.print(); }, 180);
-            photo.complete ? openPrint() : photo.addEventListener('load', openPrint, { once: true });
-          <\/script>
-        </body>
-      </html>`);
-    printWindow.document.close();
-
-    window.setTimeout(() => setIsPrinting(false), 900);
+    window.print();
+    setIsPrinting(false);
   };
 
   return (
     <div className="result-screen">
+      <style>{`
+        @page { size: 4in 6in; margin: 0; }
+        @media print {
+          body * { visibility: hidden !important; }
+          #print-photo, #print-photo * { visibility: visible !important; }
+          #print-photo {
+            position: fixed;
+            inset: 0;
+            display: grid;
+            place-items: center;
+            width: 4in;
+            height: 6in;
+            padding: 0;
+            background: #fff;
+          }
+          #print-photo img {
+            width: 3.375in;
+            height: 6in;
+            max-width: none;
+            max-height: none;
+            object-fit: contain;
+          }
+        }
+      `}</style>
+
+      {printImageUrl && (
+        <PrintModalBackdrop
+          role="presentation"
+          onMouseDown={event => {
+            if (event.target === event.currentTarget && !isPrinting) setPrintImageUrl('');
+          }}
+        >
+          <PrintModal role="dialog" aria-modal="true" aria-labelledby="print-modal-title">
+            <h2 id="print-modal-title">사진을 인화할까요?</h2>
+            <p>미리보기를 확인한 뒤 AirPrint에서 Canon SELPHY CP1500을 선택해주세요.</p>
+            <PrintModalPhoto id="print-photo">
+              <img src={printImageUrl} alt="인쇄할 네컷 사진 미리보기" />
+            </PrintModalPhoto>
+            <PrintModalActions>
+              <ActionButton $tone="soft" onClick={() => setPrintImageUrl('')} disabled={isPrinting}>취소</ActionButton>
+              <ActionButton $tone="print" onClick={confirmPrint} disabled={isPrinting}>
+                <PrintIcon />
+                {isPrinting ? '인쇄 준비 중...' : 'AirPrint 열기'}
+              </ActionButton>
+            </PrintModalActions>
+          </PrintModal>
+        </PrintModalBackdrop>
+      )}
+
       <div className="topbar">
         <button className="back-btn" onClick={onRetake} aria-label="다시 촬영하기">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
