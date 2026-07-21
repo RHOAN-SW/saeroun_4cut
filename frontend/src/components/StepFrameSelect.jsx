@@ -17,17 +17,19 @@ const PreviewArea = styled.div`
   min-height: 0;
   display: grid;
   place-items: center;
-  padding: 6px 24px 12px;
+  padding: 10px 18px 12px;
 
   canvas {
-    height: 100%;
     width: auto;
+    height: min(72vh, 760px);
+    max-width: 100%;
+    max-height: 100%;
     aspect-ratio: 9 / 16;
     object-fit: contain;
-    max-height: 500px;
-    max-width: 100%;
     border: 1px solid #c8cdd2;
+    border-radius: 22px;
     background: #fff;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
   }
 `;
 

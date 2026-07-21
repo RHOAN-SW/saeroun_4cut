@@ -16,12 +16,14 @@ const PreviewArea = styled.div`
   min-height: 0;
   display: grid;
   place-items: center;
-  padding: 4px 24px 10px;
+  padding: 4px 20px 10px;
 `;
 
 const PreviewSheet = styled.div`
-  height: 100%;
-  max-height: 470px;
+  width: auto;
+  height: min(72vh, 760px);
+  max-width: 100%;
+  max-height: 100%;
   aspect-ratio: 9 / 16;
   padding: 8% 6% 24%;
   border: 1px solid #ccd0d4;
