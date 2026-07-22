@@ -1,12 +1,7 @@
 // src/utils/composer.js
 
 export const FRAME_OPTIONS = [
-  { id: 'clean', name: '클린 화이트', color: '#ffffff' },
-  { id: 'mono', name: '모노 블랙', color: '#14171a' },
-  { id: 'winning', name: 'WINNING ALL', color: '#f4d56b', preview: '/frames/frame_0001.png' },
-  { id: 'sky', name: '스카이 블루', color: '#a9c9ff' },
-  { id: 'sage', name: '세이지 그린', color: '#c7d5b5' },
-  { id: 'peach', name: '피치 코랄', color: '#ffc7ae' },
+  { id: 'frame0001', name: 'FRAME 0001', color: '#ffffff', preview: '/frames/frame_0001.png' },
 ];
 
 export const FILTER_OPTIONS = [
@@ -85,21 +80,7 @@ function drawImageCover(ctx, img, x, y, w, h, radius = 0) {
   ctx.restore();
 }
 
-function drawSimpleFrame(ctx, frameId, width, height) {
-  const isMono = frameId === 'mono';
-  ctx.fillStyle = isMono ? '#ffffff' : '#191f28';
-  ctx.textAlign = 'center';
-  ctx.font = '800 62px -apple-system, BlinkMacSystemFont, sans-serif';
-  ctx.fillText('JR SELF STUDIO', width / 2, 1770);
-  ctx.font = '500 26px -apple-system, BlinkMacSystemFont, sans-serif';
-  ctx.letterSpacing = '5px';
-  ctx.fillText('FOUR MOMENTS, ONE FRAME', width / 2, 1832);
-  ctx.fillStyle = isMono ? '#9aa2aa' : '#8b95a1';
-  ctx.font = '500 22px -apple-system, BlinkMacSystemFont, sans-serif';
-  ctx.fillText(new Date().toLocaleDateString('ko-KR'), width / 2, 1912);
-}
-
-export async function compose(canvas, photos, frameId = 'clean', filterId = 'original') {
+export async function compose(canvas, photos, frameId = 'frame0001', filterId = 'original') {
   const ctx = canvas.getContext('2d');
   canvas.width = LAYOUT.canvasWidth;
   canvas.height = LAYOUT.canvasHeight;
@@ -125,15 +106,11 @@ export async function compose(canvas, photos, frameId = 'clean', filterId = 'ori
     }
   }
 
-  if (frameId === 'winning') {
-    try {
-      const frameImg = await loadImage('/frames/frame_0001.png');
-      ctx.drawImage(frameImg, 0, 0, canvas.width, canvas.height);
-    } catch (e) {
-      console.warn('Frame image load failed:', e);
-    }
-  } else {
-    drawSimpleFrame(ctx, frameId, canvas.width, canvas.height);
+  try {
+    const frameImg = await loadImage('/frames/frame_0001.png');
+    ctx.drawImage(frameImg, 0, 0, canvas.width, canvas.height);
+  } catch (e) {
+    console.warn('Frame image load failed:', e);
   }
 
   return canvas;

@@ -28,7 +28,7 @@ const pageTransition = {
 export default function App() {
   const [step, setStep] = useState(0); // 0: Home, 1: Guide, 2: Camera, 3: Photos, 4: Frame, 5: Preview, 6: QR
   const [showSettings, setShowSettings] = useState(false);
-  const [selectedFrame, setSelectedFrame] = useState('clean');
+  const [selectedFrame, setSelectedFrame] = useState('frame0001');
   const [selectedFilter, setSelectedFilter] = useState('original');
   
   // Camera Settings State

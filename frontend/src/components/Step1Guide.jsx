@@ -24,13 +24,6 @@ export default function Step1Guide({ onNext, onBack }) {
     return (
       <div className="guide-ready">
         <h2>곧 촬영이 시작해요!</h2>
-
-        <svg className="guide-ready-mark" width="120" height="120" viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="3" aria-hidden="true">
-          <rect x="10" y="10" width="35" height="35" />
-          <rect x="55" y="10" width="35" height="35" />
-          <rect x="10" y="55" width="35" height="35" />
-          <rect x="55" y="55" width="35" height="35" />
-        </svg>
       </div>
     );
   }
