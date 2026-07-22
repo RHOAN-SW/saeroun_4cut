@@ -49,6 +49,9 @@ export default function App() {
   const [qrData, setQrData] = useState(null);
 
   useEffect(() => {
+    const preventDrag = (event) => event.preventDefault();
+    document.addEventListener('dragstart', preventDrag);
+
     // Remove legacy app-shell caches so an iPad home-screen install always receives the latest flow.
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.getRegistrations().then(registrations => {
@@ -74,7 +77,10 @@ export default function App() {
       })
       .catch(() => {});
 
-    return () => { active = false; };
+    return () => {
+      active = false;
+      document.removeEventListener('dragstart', preventDrag);
+    };
   }, []);
 
   const updateSetting = (key, value) => {

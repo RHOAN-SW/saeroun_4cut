@@ -98,8 +98,7 @@ const CircleOption = styled.button`
   border: 2px solid ${({ $selected }) => $selected ? '#111' : '#b8bec5'};
   border-radius: 50%;
   background: ${({ $background }) => $background};
-  outline: ${({ $selected }) => $selected ? '2px solid #111' : 'none'};
-  outline-offset: 2px;
+  outline: none;
   transition: transform 120ms ease;
 
   &:active { transform: scale(.94); }
