@@ -140,7 +140,7 @@ export default function Step2Camera({ onNext, capturedPhotos, setCapturedPhotos,
     <div style={{ position: 'absolute', inset: 0, background: '#000', display: 'flex', flexDirection: 'column' }}>
       
       {/* Topbar Absolute Overlay */}
-      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, padding: '20px', display: 'flex', justifyContent: 'space-between', zIndex: 100 }}>
+      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, padding: '20px', display: 'flex', justifyContent: 'flex-start', zIndex: 100 }}>
         <button 
           onClick={onBack} 
           disabled={isCapturing}
@@ -150,34 +150,35 @@ export default function Step2Camera({ onNext, capturedPhotos, setCapturedPhotos,
             <polyline points="15 18 9 12 15 6"></polyline>
           </svg>
         </button>
-        {/* Countdown at top center */}
-        <AnimatePresence>
-          {countdown !== null && (
-            <motion.div 
-              key={countdown}
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.3 }}
-              style={{
-                position: 'absolute',
-                left: '50%',
-                transform: 'translateX(-50%)',
-                top: '25px',
-                color: '#fff',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                textShadow: '0 2px 10px rgba(0,0,0,0.5)'
-              }}
-            >
-              <span style={{ fontSize: '18px', fontWeight: '500', marginBottom: '4px' }}>남은 시간</span>
-              <span style={{ fontSize: '64px', fontWeight: 'bold', lineHeight: 1 }}>{countdown}</span>
-            </motion.div>
-          )}
-        </AnimatePresence>
-        <div style={{ width: 44 }}></div>
       </div>
+
+      <AnimatePresence>
+        {countdown !== null && (
+          <motion.div
+            key={countdown}
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            style={{
+              position: 'absolute',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              top: '25px',
+              color: '#fff',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              textShadow: '0 2px 10px rgba(0,0,0,0.5)',
+              pointerEvents: 'none',
+              zIndex: 100,
+            }}
+          >
+            <span style={{ fontSize: '18px', fontWeight: '500', marginBottom: '4px' }}>남은 시간</span>
+            <span style={{ fontSize: '64px', fontWeight: 'bold', lineHeight: 1 }}>{countdown}</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Main Camera Area */}
       <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>

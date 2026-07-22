@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 
-export default function CameraSettings({ onClose, settings, updateSetting }) {
+export default function CameraSettings({ onClose, settings, updateSetting, saveStatus }) {
   const timers = [4, 6, 8, 12];
   const shots = [4, 6, 8];
 
@@ -68,6 +68,12 @@ export default function CameraSettings({ onClose, settings, updateSetting }) {
             ></div>
           </div>
         </div>
+
+        <p role="status" style={{ marginTop: '24px', color: saveStatus === 'error' ? '#d92d20' : '#777', fontSize: '13px' }}>
+          {saveStatus === 'saving' && '설정을 저장하는 중이에요.'}
+          {saveStatus === 'saved' && '설정이 저장됐어요.'}
+          {saveStatus === 'error' && '설정을 저장하지 못했어요. 잠시 후 다시 시도해주세요.'}
+        </p>
 
         <p className="privacy-note">사진은 이 iPad에서 합성되고, QR을 만들 때만 완성본 한 장이 Supabase에 10분 동안 저장됩니다.</p>
       </div>

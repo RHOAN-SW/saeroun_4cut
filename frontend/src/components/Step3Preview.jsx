@@ -57,7 +57,7 @@ const ActionButton = styled.button`
   min-height: 58px;
   padding: 16px 18px;
   border: 0;
-  border-radius: ${({ theme }) => theme.radius.button};
+  border-radius: 14px;
   background: ${({ $tone, theme }) => (
     $tone === 'print' ? theme.colors.accent
       : $tone === 'dark' ? theme.colors.primary
@@ -90,7 +90,7 @@ const ActionButton = styled.button`
   @media (max-height: 760px) {
     min-height: 46px;
     padding: 10px 14px;
-    border-radius: 4px;
+    border-radius: 14px;
     font-size: 14px;
   }
 `;

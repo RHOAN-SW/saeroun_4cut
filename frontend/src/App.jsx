@@ -27,9 +27,11 @@ const pageTransition = {
 };
 
 export default function App() {
-  const [step, setStep] = useState(0); // 0: Home, 1: Guide, 2: Camera, 3: Photos, 4: Frame, 5: Preview, 6: QR
+  const [step, setStep] = useState(0); // 0: Home, 1: Guide, 2: Camera, 3: Photos, 4: Frame, 5: Preview
   const [showSettingsPin, setShowSettingsPin] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [settingsPin, setSettingsPin] = useState('');
+  const [settingsSaveStatus, setSettingsSaveStatus] = useState('idle');
   const [selectedFrame, setSelectedFrame] = useState('frame0001');
   const [selectedFilter, setSelectedFilter] = useState('original');
   
@@ -58,18 +60,46 @@ export default function App() {
         keys.filter(key => key.startsWith('jr-fourcut-')).map(key => caches.delete(key))
       )).catch(() => {});
     }
+
+    let active = true;
+    fetch('/api/camera-settings', { cache: 'no-store' })
+      .then(response => {
+        if (!response.ok) throw new Error('설정을 불러오지 못했습니다.');
+        return response.json();
+      })
+      .then(savedSettings => {
+        if (!active) return;
+        setSettings(savedSettings);
+        setCapturedPhotos(Array(savedSettings.shots).fill(null));
+      })
+      .catch(() => {});
+
+    return () => { active = false; };
   }, []);
 
   const updateSetting = (key, value) => {
-    setSettings(prev => {
-      const next = { ...prev, [key]: value };
-      if (key === 'shots') {
-        // Adjust array size if shots count changes
-        setCapturedPhotos(Array(value).fill(null));
-        setSelectedPhotos([]);
-      }
-      return next;
-    });
+    const next = { ...settings, [key]: value };
+    setSettings(next);
+
+    if (key === 'shots') {
+      setCapturedPhotos(Array(value).fill(null));
+      setSelectedPhotos([]);
+    }
+
+    setSettingsSaveStatus('saving');
+    fetch('/api/camera-settings', {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-settings-pin': settingsPin,
+      },
+      body: JSON.stringify(next),
+    })
+      .then(response => {
+        if (!response.ok) throw new Error('설정을 저장하지 못했습니다.');
+        setSettingsSaveStatus('saved');
+      })
+      .catch(() => setSettingsSaveStatus('error'));
   };
 
   const resetAll = () => {
@@ -87,7 +117,9 @@ export default function App() {
           {showSettingsPin && (
             <AdminPinPad
               onCancel={() => setShowSettingsPin(false)}
-              onSuccess={() => {
+              onSuccess={pin => {
+                setSettingsPin(pin);
+                setSettingsSaveStatus('idle');
                 setShowSettingsPin(false);
                 setShowSettings(true);
               }}
@@ -101,6 +133,7 @@ export default function App() {
               onClose={() => setShowSettings(false)}
               settings={settings}
               updateSetting={updateSetting}
+              saveStatus={settingsSaveStatus}
             />
           </div>
         )}
@@ -212,25 +245,21 @@ export default function App() {
                 }}
                 onShowQr={(data) => {
                   setQrData(data);
-                  setStep(6);
                 }}
                 onNewSession={resetAll}
               />
             </motion.div>
           )}
-
-          {step === 6 && qrData && (
-            <motion.div
-              key="step6"
-              initial="initial" animate="in" exit="out"
-              variants={pageVariants} transition={pageTransition}
-              className="step-section active"
-            >
-              <Step4QR qrData={qrData} onNewSession={resetAll} />
-            </motion.div>
-          )}
         </AnimatePresence>
       </main>
+
+      {qrData && (
+        <Step4QR
+          qrData={qrData}
+          onClose={() => setQrData(null)}
+          onNewSession={resetAll}
+        />
+      )}
       </div>
     </ThemeProvider>
   );

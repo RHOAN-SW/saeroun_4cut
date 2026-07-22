@@ -16,7 +16,7 @@ export default function Home({ onStart, onOpenSettings }) {
           alt="JR self studio logo" 
           draggable="false"
           style={{ 
-            width: '350px', 
+            width: '437.5px',
             maxWidth: '80%', 
             objectFit: 'contain',
             pointerEvents: 'none',

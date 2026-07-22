@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 
-export default function Step4QR({ qrData, onNewSession }) {
+export default function Step4QR({ qrData, onClose, onNewSession }) {
   const { downloadUrl, expiresAt } = qrData;
   const [timeLeft, setTimeLeft] = useState('10:00');
 
@@ -19,9 +19,24 @@ export default function Step4QR({ qrData, onNewSession }) {
     return () => clearInterval(interval);
   }, [expiresAt]);
 
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
+
   return (
-    <div className="qr-popup-backdrop" role="dialog" aria-modal="true">
-      <div className="qr-popup">
+    <div
+      className="qr-popup-backdrop"
+      role="dialog"
+      aria-modal="true"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) onClose();
+      }}
+    >
+      <div className="qr-popup" onMouseDown={(event) => event.stopPropagation()}>
         <div className="qr-popup-header">
           <div>
             <span className="qr-eyebrow">QR 준비 완료</span>
@@ -41,6 +56,7 @@ export default function Step4QR({ qrData, onNewSession }) {
         </div>
 
         <div className="qr-popup-actions">
+          <button className="btn-light" onClick={onClose}>완성 화면으로 돌아가기</button>
           <button className="btn-black" onClick={onNewSession}>새로 촬영하기</button>
         </div>
       </div>

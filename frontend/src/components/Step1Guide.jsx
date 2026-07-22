@@ -1,12 +1,64 @@
 import React, { useEffect, useState } from 'react';
 
 const GUIDE_ITEMS = [
-  '타이머 후 자동으로 촬영돼요.',
-  '화면의 촬영 버튼을 누르면 남은 시간을 2초로 줄일 수 있어요.',
-  '여러 장을 찍었다면 마음에 드는 4장을 고를 수 있어요.',
-  '뒤로가기로 촬영을 중단할 수 있어요.',
-  '완성된 네컷은 QR로 받거나 이 iPad에 바로 저장할 수 있어요.',
+  { id: 'timer', text: '6초 타이머 후 바로 촬영돼요.' },
+  { id: 'shutter', text: '촬영하기를 누르면 바로 시작돼요.' },
+  { id: 'select', text: '6장 촬영 후 마음에 드는 4장을 골라요.' },
+  { id: 'frame', text: '프레임과 필터는 촬영이 끝난 뒤 선택해요.' },
+  { id: 'cancel', text: '뒤로가기로 촬영을 중단할 수 있어요.' },
+  { id: 'qr', text: 'QR로 사진과 영상을 바로 받아가요.' },
 ];
+
+const ICONS = {
+  timer: (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <circle cx="12" cy="13" r="7" />
+      <path d="M12 10V7" />
+      <path d="M16 3L16.5 4" />
+      <path d="M4.5 5L5 4" />
+      <path d="M12 2.5V4" />
+    </svg>
+  ),
+  shutter: (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="3" y="7" width="18" height="14" rx="2" />
+      <path d="M8 7L10 3H14L16 7" />
+      <circle cx="12" cy="14" r="3" />
+    </svg>
+  ),
+  select: (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="4" y="7" width="14" height="12" rx="2" />
+      <path d="M8 11H8.01" />
+      <path d="M12 11H12.01" />
+      <path d="M16 11H16.01" />
+    </svg>
+  ),
+  frame: (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="3" y="3" width="18" height="18" rx="3" />
+      <path d="M8 8L16 8" />
+      <path d="M8 12L16 12" />
+      <path d="M8 16L16 16" />
+    </svg>
+  ),
+  cancel: (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="9" />
+      <path d="M15 9L9 15" />
+      <path d="M9 9L15 15" />
+    </svg>
+  ),
+  qr: (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="3" y="3" width="6" height="6" rx="1" />
+      <rect x="15" y="3" width="6" height="6" rx="1" />
+      <rect x="3" y="15" width="6" height="6" rx="1" />
+      <path d="M15 15H18V18H21" />
+      <path d="M18 15V18" />
+    </svg>
+  ),
+};
 
 export default function Step1Guide({ onNext, onBack }) {
   const [phase, setPhase] = useState('guide');
@@ -43,14 +95,16 @@ export default function Step1Guide({ onNext, onBack }) {
           <h1>찍기 전에<br />보고 갈까요?</h1>
         </header>
 
-        <ol className="guide-list">
-          {GUIDE_ITEMS.map((item, index) => (
-            <li key={item}>
-              <span className="guide-number" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
-              <span>{item}</span>
-            </li>
-          ))}
-        </ol>
+        <div className="guide-card">
+          <ol className="guide-list">
+            {GUIDE_ITEMS.map(({ id, text }) => (
+              <li key={id}>
+                <div className="guide-item-icon">{ICONS[id]}</div>
+                <div className="guide-item-copy">{text}</div>
+              </li>
+            ))}
+          </ol>
+        </div>
       </div>
 
       <div className="guide-footer">

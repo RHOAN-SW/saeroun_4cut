@@ -10,7 +10,7 @@ export default function AdminPinPad({ onSuccess, onCancel }) {
   const handlePress = (char) => {
     if (char === '완료') {
       if (pin === SETTINGS_PIN) {
-        onSuccess();
+        onSuccess(pin);
       } else {
         setError('비밀번호가 올바르지 않아요.');
         setPin('');
