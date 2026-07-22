@@ -1,7 +1,20 @@
 // src/utils/composer.js
 
 export const FRAME_OPTIONS = [
-  { id: 'frame0001', name: 'FRAME 0001', color: '#ffffff', preview: '/frames/frame_0001.png' },
+  {
+    id: 'frame0001',
+    name: 'FRAME 0001',
+    color: '#ffffff',
+    preview: '/frames/frame_0001_button.png',
+    src: '/frames/frame_0001.png',
+  },
+  {
+    id: 'frame0002',
+    name: 'FRAME 0002',
+    color: '#ffffff',
+    preview: '/frames/frame_0002_button.png',
+    src: '/frames/frame_0002.png',
+  },
 ];
 
 export const FILTER_OPTIONS = [
@@ -107,7 +120,7 @@ export async function compose(canvas, photos, frameId = 'frame0001', filterId = 
   }
 
   try {
-    const frameImg = await loadImage('/frames/frame_0001.png');
+    const frameImg = await loadImage(frame.src);
     ctx.drawImage(frameImg, 0, 0, canvas.width, canvas.height);
   } catch (e) {
     console.warn('Frame image load failed:', e);
@@ -122,7 +135,5 @@ export function canvasToBase64(canvas, quality = 0.92) {
 
 export function generateDefaultFrame() { return null; }
 export function generateFrameThumbnail(id) { 
-  if (id === 'no-frame') return '/frames/frame_0001.png';
-  // Use the newly added frame image as the fallback preview
-  return '/frames/frame_0001.png';
+  return FRAME_OPTIONS.find(option => option.id === id)?.preview || FRAME_OPTIONS[0].preview;
 }
