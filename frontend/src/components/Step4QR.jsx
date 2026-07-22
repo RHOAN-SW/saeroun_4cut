@@ -38,17 +38,17 @@ export default function Step4QR({ qrData, onClose, onNewSession }) {
     >
       <div className="qr-popup" onMouseDown={(event) => event.stopPropagation()}>
         <div className="qr-popup-header">
-          <div>
-            <span className="qr-eyebrow">QR 준비 완료</span>
-            <h2>이제 스캔해서 저장해요</h2>
-          </div>
+          <h2>스캔해서 저장하기</h2>
         </div>
 
         <div className="qr-popup-card" aria-label="사진 다운로드 QR코드">
-          <QRCodeSVG value={downloadUrl} size={232} level="M" marginSize={2} />
+          <QRCodeSVG value={downloadUrl} size={300} level="M" marginSize={2} />
         </div>
 
-        <p className="qr-popup-copy">스마트폰 카메라로 QR을 스캔하면 완성된 네컷 사진을 바로 저장할 수 있어요.</p>
+        <p className="qr-popup-copy">
+          QR코드를 스캔하면<br />
+          완성된 사진을 바로 저장할 수 있어요
+        </p>
 
         <div className="qr-popup-info">
           <strong>{timeLeft}</strong>
@@ -56,7 +56,6 @@ export default function Step4QR({ qrData, onClose, onNewSession }) {
         </div>
 
         <div className="qr-popup-actions">
-          <button className="btn-light" onClick={onClose}>완성 화면으로 돌아가기</button>
           <button className="btn-black" onClick={onNewSession}>새로 촬영하기</button>
         </div>
       </div>
