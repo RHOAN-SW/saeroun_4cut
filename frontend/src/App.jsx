@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { ThemeProvider } from '@emotion/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Home from './components/Home';
+import AdminPinPad from './components/AdminPinPad';
 import CameraSettings from './components/CameraSettings';
 import Step1Guide from './components/Step1Guide';
 import StepPhotoSelect from './components/StepPhotoSelect';
@@ -27,6 +28,7 @@ const pageTransition = {
 
 export default function App() {
   const [step, setStep] = useState(0); // 0: Home, 1: Guide, 2: Camera, 3: Photos, 4: Frame, 5: Preview, 6: QR
+  const [showSettingsPin, setShowSettingsPin] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [selectedFrame, setSelectedFrame] = useState('frame0001');
   const [selectedFilter, setSelectedFilter] = useState('original');
@@ -81,6 +83,18 @@ export default function App() {
     <ThemeProvider theme={tossTheme}>
       <div id="app">
       {/* Modals outside main AnimatePresence */}
+        <AnimatePresence>
+          {showSettingsPin && (
+            <AdminPinPad
+              onCancel={() => setShowSettingsPin(false)}
+              onSuccess={() => {
+                setShowSettingsPin(false);
+                setShowSettings(true);
+              }}
+            />
+          )}
+        </AnimatePresence>
+
         {showSettings && (
           <div style={{ position: 'absolute', inset: 0, zIndex: 50 }}>
             <CameraSettings 
@@ -102,7 +116,7 @@ export default function App() {
             >
               <Home 
                 onStart={() => setStep(settings.showGuide !== false ? 1 : 2)}
-                onOpenSettings={() => setShowSettings(true)}
+                onOpenSettings={() => setShowSettingsPin(true)}
               />
             </motion.div>
           )}
