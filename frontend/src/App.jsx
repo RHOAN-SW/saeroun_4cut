@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { ThemeProvider } from '@emotion/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Home from './components/Home';
@@ -48,6 +48,22 @@ export default function App() {
   const [selectedPhotos, setSelectedPhotos] = useState([]);
   const [qrData, setQrData] = useState(null);
 
+  const loadSharedSettings = useCallback(async (signal) => {
+    const response = await fetch('/api/camera-settings', {
+      cache: 'no-store',
+      signal,
+    });
+    if (!response.ok) throw new Error('설정을 불러오지 못했습니다.');
+
+    const savedSettings = await response.json();
+    if (signal?.aborted) return null;
+
+    setSettings(savedSettings);
+    setCapturedPhotos(Array(savedSettings.shots).fill(null));
+    setSelectedPhotos([]);
+    return savedSettings;
+  }, []);
+
   useEffect(() => {
     const preventDrag = (event) => event.preventDefault();
     document.addEventListener('dragstart', preventDrag);
@@ -64,48 +80,58 @@ export default function App() {
       )).catch(() => {});
     }
 
-    let active = true;
-    fetch('/api/camera-settings', { cache: 'no-store' })
-      .then(response => {
-        if (!response.ok) throw new Error('설정을 불러오지 못했습니다.');
-        return response.json();
-      })
-      .then(savedSettings => {
-        if (!active) return;
-        setSettings(savedSettings);
-        setCapturedPhotos(Array(savedSettings.shots).fill(null));
-      })
-      .catch(() => {});
-
     return () => {
-      active = false;
       document.removeEventListener('dragstart', preventDrag);
     };
   }, []);
 
-  const updateSetting = (key, value) => {
-    const next = { ...settings, [key]: value };
-    setSettings(next);
+  useEffect(() => {
+    if (step !== 0 || showSettings || showSettingsPin) return undefined;
 
-    if (key === 'shots') {
-      setCapturedPhotos(Array(value).fill(null));
-      setSelectedPhotos([]);
-    }
+    let active = true;
+    const controller = new AbortController();
+    const syncSettings = () => {
+      if (!active || document.visibilityState === 'hidden') return;
+      loadSharedSettings(controller.signal).catch(() => {});
+    };
 
+    syncSettings();
+    const intervalId = window.setInterval(syncSettings, 5000);
+    window.addEventListener('focus', syncSettings);
+    document.addEventListener('visibilitychange', syncSettings);
+
+    return () => {
+      active = false;
+      controller.abort();
+      window.clearInterval(intervalId);
+      window.removeEventListener('focus', syncSettings);
+      document.removeEventListener('visibilitychange', syncSettings);
+    };
+  }, [loadSharedSettings, showSettings, showSettingsPin, step]);
+
+  const saveSettings = async (nextSettings) => {
     setSettingsSaveStatus('saving');
-    fetch('/api/camera-settings', {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-settings-pin': settingsPin,
-      },
-      body: JSON.stringify(next),
-    })
-      .then(response => {
-        if (!response.ok) throw new Error('설정을 저장하지 못했습니다.');
-        setSettingsSaveStatus('saved');
-      })
-      .catch(() => setSettingsSaveStatus('error'));
+    try {
+      const response = await fetch('/api/camera-settings', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-settings-pin': settingsPin,
+        },
+        body: JSON.stringify(nextSettings),
+      });
+      if (!response.ok) throw new Error('설정을 저장하지 못했습니다.');
+
+      const savedSettings = await response.json();
+      setSettings(savedSettings);
+      setCapturedPhotos(Array(savedSettings.shots).fill(null));
+      setSelectedPhotos([]);
+      setSettingsSaveStatus('saved');
+      return savedSettings;
+    } catch (error) {
+      setSettingsSaveStatus('error');
+      throw error;
+    }
   };
 
   const resetAll = () => {
@@ -138,7 +164,8 @@ export default function App() {
             <CameraSettings 
               onClose={() => setShowSettings(false)}
               settings={settings}
-              updateSetting={updateSetting}
+              onEdit={() => setSettingsSaveStatus('idle')}
+              onSave={saveSettings}
               saveStatus={settingsSaveStatus}
             />
           </div>

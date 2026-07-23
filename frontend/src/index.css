@@ -274,6 +274,15 @@ img, canvas, svg, a {
   transition: 0.3s;
 }
 
+.settings-save-button {
+  margin-top: 16px;
+}
+
+.settings-save-button:disabled {
+  background: #d8d8d8;
+  cursor: default;
+}
+
 /* ─── Flat Guide ─── */
 .guide-screen,
 .guide-ready {
