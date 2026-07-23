@@ -2,8 +2,6 @@ import { NextResponse } from 'next/server';
 import { getSupabase } from '@/lib/supabase-server';
 
 const SETTINGS_ID = 'default';
-const SETTINGS_BUCKET = 'booth-uploads';
-const SETTINGS_FILE = `app-data/camera-settings/${SETTINGS_ID}.json`;
 const ALLOWED_TIMERS = new Set([4, 6, 8, 12]);
 const ALLOWED_SHOTS = new Set([4, 6, 8]);
 
@@ -13,6 +11,14 @@ const DEFAULT_SETTINGS = {
   mirror: true,
   filter: false,
   showGuide: true,
+};
+
+type SettingsRow = {
+  timer: number;
+  shots: number;
+  mirror: boolean;
+  filter: boolean;
+  show_guide: boolean;
 };
 
 function isValidSettings(value: unknown): value is typeof DEFAULT_SETTINGS {
@@ -30,23 +36,27 @@ function isValidSettings(value: unknown): value is typeof DEFAULT_SETTINGS {
   );
 }
 
+function rowToSettings(row: SettingsRow) {
+  return {
+    timer: row.timer,
+    shots: row.shots,
+    mirror: row.mirror,
+    filter: row.filter,
+    showGuide: row.show_guide,
+  };
+}
+
 export async function GET() {
   try {
     const supabase = getSupabase();
-    const { data, error } = await supabase.storage
-      .from(SETTINGS_BUCKET)
-      .download(SETTINGS_FILE);
+    const { data, error } = await supabase
+      .from('camera_settings')
+      .select('timer, shots, mirror, filter, show_guide')
+      .eq('id', SETTINGS_ID)
+      .maybeSingle();
 
-    if (error) {
-      if (/not found|does not exist/i.test(error.message)) {
-        return NextResponse.json(DEFAULT_SETTINGS, {
-          headers: { 'Cache-Control': 'no-store' },
-        });
-      }
-      throw error;
-    }
-
-    const savedSettings = JSON.parse(await data.text());
+    if (error) throw error;
+    const savedSettings = data ? rowToSettings(data as SettingsRow) : DEFAULT_SETTINGS;
     if (!isValidSettings(savedSettings)) throw new Error('저장된 카메라 설정값이 올바르지 않습니다.');
 
     return NextResponse.json(savedSettings, {
@@ -72,11 +82,18 @@ export async function PUT(request: Request) {
     }
 
     const supabase = getSupabase();
-    const { error } = await supabase.storage
-      .from(SETTINGS_BUCKET)
-      .upload(SETTINGS_FILE, JSON.stringify(body), {
-        contentType: 'application/json',
-        upsert: true,
+    const { error } = await supabase
+      .from('camera_settings')
+      .upsert({
+        id: SETTINGS_ID,
+        timer: body.timer,
+        shots: body.shots,
+        mirror: body.mirror,
+        filter: body.filter,
+        show_guide: body.showGuide,
+        updated_at: new Date().toISOString(),
+      }, {
+        onConflict: 'id',
       });
 
     if (error) throw error;
