@@ -1,6 +1,6 @@
 create table if not exists public.camera_settings (
   id text primary key,
-  timer integer not null default 6 check (timer in (4, 6, 8, 12)),
+  timer integer not null default 8 check (timer in (4, 6, 8, 12)),
   shots integer not null default 6 check (shots in (4, 6, 8)),
   mirror boolean not null default true,
   filter boolean not null default false,

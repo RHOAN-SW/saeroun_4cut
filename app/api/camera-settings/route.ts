@@ -8,7 +8,7 @@ const ALLOWED_TIMERS = new Set([4, 6, 8, 12]);
 const ALLOWED_SHOTS = new Set([4, 6, 8]);
 
 const DEFAULT_SETTINGS = {
-  timer: 6,
+  timer: 8,
   shots: 6,
   mirror: true,
   filter: false,

@@ -37,7 +37,7 @@ export default function App() {
   
   // Camera Settings State
   const [settings, setSettings] = useState({
-    timer: 6,
+    timer: 8,
     shots: 6,
     mirror: true,
     filter: false,
