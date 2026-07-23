@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import styled from '@emotion/styled';
 import { compose } from '../utils/composer';
 
@@ -171,6 +171,8 @@ const canvasToBlob = (canvas) => new Promise((resolve, reject) => {
 
 export default function Step3Preview({ photos, frameId, filterId, onRetake, onNewSession, onShowQr }) {
   const canvasRef = useRef(null);
+  const archivedPhotosRef = useRef(new Map());
+  const archivePromisesRef = useRef(new Map());
   const availablePhotos = useMemo(() => photos.filter(Boolean), [photos]);
   const [selectedIndexes, setSelectedIndexes] = useState(() => availablePhotos.slice(0, 4).map((_, index) => index));
   const [isComposing, setIsComposing] = useState(true);
@@ -184,17 +186,55 @@ export default function Step3Preview({ photos, frameId, filterId, onRetake, onNe
     () => selectedIndexes.map(index => availablePhotos[index]).filter(Boolean),
     [availablePhotos, selectedIndexes]
   );
+  const archiveKey = useMemo(
+    () => `${frameId}:${filterId}:${selectedIndexes.join(',')}`,
+    [filterId, frameId, selectedIndexes],
+  );
+
+  const archiveComposite = useCallback((key) => {
+    const archived = archivedPhotosRef.current.get(key);
+    if (archived) return Promise.resolve(archived);
+
+    const pending = archivePromisesRef.current.get(key);
+    if (pending) return pending;
+
+    const canvas = canvasRef.current;
+    if (!canvas) return Promise.reject(new Error('완성된 사진이 없습니다.'));
+
+    const promise = (async () => {
+      const blob = await canvasToBlob(canvas);
+      const formData = new FormData();
+      formData.append('photo', blob, makeFileName());
+      const response = await fetch('/api/upload', { method: 'POST', body: formData });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data?.error || '업로드 실패');
+      archivedPhotosRef.current.set(key, data);
+      return data;
+    })();
+
+    archivePromisesRef.current.set(key, promise);
+    promise.then(
+      () => archivePromisesRef.current.delete(key),
+      () => archivePromisesRef.current.delete(key),
+    );
+    return promise;
+  }, []);
 
   useEffect(() => {
     let active = true;
     const runCompose = async () => {
       setIsComposing(true);
       if (canvasRef.current) await compose(canvasRef.current, selectedPhotos, frameId, filterId);
-      if (active) setIsComposing(false);
+      if (active) {
+        setIsComposing(false);
+        archiveComposite(archiveKey).catch(error => {
+          console.error('Automatic photo archive failed', error);
+        });
+      }
     };
     runCompose().catch(() => active && setNotice('미리보기를 만들지 못했어요. 다시 촬영해주세요.'));
     return () => { active = false; };
-  }, [selectedPhotos, frameId, filterId]);
+  }, [archiveComposite, archiveKey, selectedPhotos, frameId, filterId]);
 
   useEffect(() => {
     if (!printImageUrl) return undefined;
@@ -261,12 +301,7 @@ export default function Step3Preview({ photos, frameId, filterId, onRetake, onNe
     setNotice('');
 
     try {
-      const blob = await canvasToBlob(canvasRef.current);
-      const formData = new FormData();
-      formData.append('photo', blob, makeFileName());
-      const response = await fetch('/api/upload', { method: 'POST', body: formData });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data?.error || '업로드 실패');
+      const data = await archiveComposite(archiveKey);
       onShowQr(data);
     } catch (error) {
       console.error(error);

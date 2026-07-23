@@ -1,5 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 
+const PHOTO_RETENTION_MS = 3 * 24 * 60 * 60 * 1000;
+
 export function getSupabase() {
   const url = process.env.SUPABASE_URL;
   const key = process.env.SUPABASE_KEY;
@@ -11,13 +13,28 @@ export function getSupabase() {
 
 export async function removeExpiredPhotos() {
   const supabase = getSupabase();
-  const { data } = await supabase
-    .from('photos')
-    .select('id, filename')
-    .lt('expires_at', new Date().toISOString())
-    .limit(100);
+  const cutoff = new Date(Date.now() - PHOTO_RETENTION_MS).toISOString();
+  let removedCount = 0;
 
-  if (!data?.length) return;
-  await supabase.storage.from('booth-uploads').remove(data.map(item => item.filename));
-  await supabase.from('photos').delete().in('id', data.map(item => item.id));
+  while (true) {
+    const { data, error: selectError } = await supabase
+      .from('photos')
+      .select('id, filename')
+      .lt('created_at', cutoff)
+      .limit(100);
+
+    if (selectError) throw selectError;
+    if (!data?.length) return removedCount;
+
+    const filenames = data.map(item => item.filename);
+    const ids = data.map(item => item.id);
+    const { error: storageError } = await supabase.storage.from('booth-uploads').remove(filenames);
+    if (storageError) throw storageError;
+
+    const { error: deleteError } = await supabase.from('photos').delete().in('id', ids);
+    if (deleteError) throw deleteError;
+
+    removedCount += data.length;
+    if (data.length < 100) return removedCount;
+  }
 }
