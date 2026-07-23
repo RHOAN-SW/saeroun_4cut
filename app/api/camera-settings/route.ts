@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { getSupabase } from '@/lib/supabase-server';
 
 const SETTINGS_ID = 'default';
+const SETTINGS_BUCKET = 'booth-uploads';
+const SETTINGS_FILE = `app-data/camera-settings/${SETTINGS_ID}.json`;
 const ALLOWED_TIMERS = new Set([4, 6, 8, 12]);
 const ALLOWED_SHOTS = new Set([4, 6, 8]);
 
@@ -13,28 +15,41 @@ const DEFAULT_SETTINGS = {
   showGuide: true,
 };
 
-function toClientSettings(row: Record<string, unknown>) {
-  return {
-    timer: row.timer,
-    shots: row.shots,
-    mirror: row.mirror,
-    filter: row.filter,
-    showGuide: row.show_guide,
-  };
+function isValidSettings(value: unknown): value is typeof DEFAULT_SETTINGS {
+  if (!value || typeof value !== 'object') return false;
+  const settings = value as Record<string, unknown>;
+
+  return (
+    typeof settings.timer === 'number'
+    && ALLOWED_TIMERS.has(settings.timer)
+    && typeof settings.shots === 'number'
+    && ALLOWED_SHOTS.has(settings.shots)
+    && typeof settings.mirror === 'boolean'
+    && typeof settings.filter === 'boolean'
+    && typeof settings.showGuide === 'boolean'
+  );
 }
 
 export async function GET() {
   try {
     const supabase = getSupabase();
-    const { data, error } = await supabase
-      .from('camera_settings')
-      .select('timer, shots, mirror, filter, show_guide')
-      .eq('id', SETTINGS_ID)
-      .maybeSingle();
+    const { data, error } = await supabase.storage
+      .from(SETTINGS_BUCKET)
+      .download(SETTINGS_FILE);
 
-    if (error) throw error;
+    if (error) {
+      if (/not found|does not exist/i.test(error.message)) {
+        return NextResponse.json(DEFAULT_SETTINGS, {
+          headers: { 'Cache-Control': 'no-store' },
+        });
+      }
+      throw error;
+    }
 
-    return NextResponse.json(data ? toClientSettings(data) : DEFAULT_SETTINGS, {
+    const savedSettings = JSON.parse(await data.text());
+    if (!isValidSettings(savedSettings)) throw new Error('저장된 카메라 설정값이 올바르지 않습니다.');
+
+    return NextResponse.json(savedSettings, {
       headers: { 'Cache-Control': 'no-store' },
     });
   } catch (error) {
@@ -52,33 +67,20 @@ export async function PUT(request: Request) {
     }
 
     const body = await request.json();
-    if (
-      !ALLOWED_TIMERS.has(body.timer)
-      || !ALLOWED_SHOTS.has(body.shots)
-      || typeof body.mirror !== 'boolean'
-      || typeof body.filter !== 'boolean'
-      || typeof body.showGuide !== 'boolean'
-    ) {
+    if (!isValidSettings(body)) {
       return NextResponse.json({ error: '잘못된 설정값입니다.' }, { status: 400 });
     }
 
     const supabase = getSupabase();
-    const { data, error } = await supabase
-      .from('camera_settings')
-      .upsert({
-        id: SETTINGS_ID,
-        timer: body.timer,
-        shots: body.shots,
-        mirror: body.mirror,
-        filter: body.filter,
-        show_guide: body.showGuide,
-        updated_at: new Date().toISOString(),
-      }, { onConflict: 'id' })
-      .select('timer, shots, mirror, filter, show_guide')
-      .single();
+    const { error } = await supabase.storage
+      .from(SETTINGS_BUCKET)
+      .upload(SETTINGS_FILE, JSON.stringify(body), {
+        contentType: 'application/json',
+        upsert: true,
+      });
 
     if (error) throw error;
-    return NextResponse.json(toClientSettings(data), {
+    return NextResponse.json(body, {
       headers: { 'Cache-Control': 'no-store' },
     });
   } catch (error) {
