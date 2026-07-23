@@ -1,6 +1,16 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
+const IPAD_STANDARD_FRONT_ZOOM = 1.4;
+
+const isIPad = () => (
+  /iPad/i.test(navigator.userAgent)
+  || (/Macintosh/i.test(navigator.userAgent) && navigator.maxTouchPoints > 1)
+);
+
+const isFrontCamera = (label = '') => /front|facetime|user|전면/i.test(label);
+const isUltraWideCamera = (label = '') => /ultra[\s-]?wide|초광각|0\.5x/i.test(label);
+
 export default function Step2Camera({ onNext, capturedPhotos, setCapturedPhotos, settings, onBack }) {
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
@@ -9,6 +19,8 @@ export default function Step2Camera({ onNext, capturedPhotos, setCapturedPhotos,
   const [isFlashing, setIsFlashing] = useState(false);
   const [isCapturing, setIsCapturing] = useState(false);
   const [cameraError, setCameraError] = useState('');
+  const [cameraZoom, setCameraZoom] = useState(1);
+  const cameraZoomRef = useRef(1);
   const mountedRef = useRef(true);
   
   const currentSlot = capturedPhotos.findIndex(p => p === null);
@@ -18,26 +30,80 @@ export default function Step2Camera({ onNext, capturedPhotos, setCapturedPhotos,
     mountedRef.current = true;
     let activeStream = null;
     let isMounted = true;
-    navigator.mediaDevices.getUserMedia({
-      video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 960 }, aspectRatio: { ideal: 4/3 } },
-      audio: false
-    })
-    .then(mediaStream => {
-      if (!isMounted) {
-        mediaStream.getTracks().forEach(t => t.stop());
-        return;
+
+    const captureConstraints = {
+      width: { ideal: 1280 },
+      height: { ideal: 960 },
+      aspectRatio: { ideal: 4 / 3 },
+    };
+
+    const startFrontCamera = async () => {
+      try {
+        let mediaStream = await navigator.mediaDevices.getUserMedia({
+          video: { ...captureConstraints, facingMode: 'user' },
+          audio: false,
+        });
+        activeStream = mediaStream;
+
+        // Permission must be granted before iPadOS exposes useful camera labels.
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const frontCameras = devices.filter(device => (
+          device.kind === 'videoinput' && isFrontCamera(device.label)
+        ));
+        const standardFrontCamera = frontCameras.find(device => !isUltraWideCamera(device.label));
+        const currentTrack = mediaStream.getVideoTracks()[0];
+        const currentDeviceId = currentTrack?.getSettings?.().deviceId;
+
+        // Prefer an explicitly listed standard front lens over an ultra-wide lens.
+        if (standardFrontCamera?.deviceId && standardFrontCamera.deviceId !== currentDeviceId) {
+          const standardStream = await navigator.mediaDevices.getUserMedia({
+            video: {
+              ...captureConstraints,
+              deviceId: { exact: standardFrontCamera.deviceId },
+            },
+            audio: false,
+          });
+          mediaStream.getTracks().forEach(track => track.stop());
+          mediaStream = standardStream;
+          activeStream = mediaStream;
+        }
+
+        if (!isMounted) {
+          mediaStream.getTracks().forEach(track => track.stop());
+          return;
+        }
+
+        const selectedLabel = mediaStream.getVideoTracks()[0]?.label || '';
+        const hasSeparateStandardAndUltraWide = (
+          frontCameras.some(device => isUltraWideCamera(device.label))
+          && frontCameras.some(device => !isUltraWideCamera(device.label))
+        );
+        const zoom = isIPad()
+          && (isUltraWideCamera(selectedLabel) || !hasSeparateStandardAndUltraWide)
+          ? IPAD_STANDARD_FRONT_ZOOM
+          : 1;
+
+        cameraZoomRef.current = zoom;
+        setCameraZoom(zoom);
+        setStream(mediaStream);
+
+        if (videoRef.current) {
+          videoRef.current.srcObject = mediaStream;
+          videoRef.current.play().catch(() => {});
+        }
+      } catch (err) {
+        console.error('Camera error', err);
+        if (activeStream) {
+          activeStream.getTracks().forEach(track => track.stop());
+          activeStream = null;
+        }
+        if (isMounted) {
+          setCameraError('카메라를 사용할 수 없어요. Safari 설정에서 카메라 권한을 허용해주세요.');
+        }
       }
-      activeStream = mediaStream;
-      setStream(mediaStream);
-      if (videoRef.current) {
-        videoRef.current.srcObject = mediaStream;
-        videoRef.current.play().catch(() => {});
-      }
-    })
-    .catch(err => {
-      console.error('Camera error', err);
-      if (isMounted) setCameraError('카메라를 사용할 수 없어요. Safari 설정에서 카메라 권한을 허용해주세요.');
-    });
+    };
+
+    startFrontCamera();
 
     return () => {
       isMounted = false;
@@ -79,6 +145,11 @@ export default function Step2Camera({ onNext, capturedPhotos, setCapturedPhotos,
       const ctx = canvas.getContext('2d');
       canvas.width = video.videoWidth || 1280;
       canvas.height = video.videoHeight || 960;
+      const zoom = cameraZoomRef.current;
+      const sourceWidth = (video.videoWidth || canvas.width) / zoom;
+      const sourceHeight = (video.videoHeight || canvas.height) / zoom;
+      const sourceX = ((video.videoWidth || canvas.width) - sourceWidth) / 2;
+      const sourceY = ((video.videoHeight || canvas.height) - sourceHeight) / 2;
 
       ctx.save();
       if (settings.mirror) {
@@ -90,7 +161,17 @@ export default function Step2Camera({ onNext, capturedPhotos, setCapturedPhotos,
         ctx.filter = 'contrast(1.1) brightness(1.1)';
       }
 
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      ctx.drawImage(
+        video,
+        sourceX,
+        sourceY,
+        sourceWidth,
+        sourceHeight,
+        0,
+        0,
+        canvas.width,
+        canvas.height,
+      );
       ctx.restore();
 
       const imageData = canvas.toDataURL('image/jpeg', 0.92);
@@ -181,7 +262,7 @@ export default function Step2Camera({ onNext, capturedPhotos, setCapturedPhotos,
       </AnimatePresence>
 
       {/* Main Camera Area */}
-      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
         {cameraError && (
           <div className="camera-error" role="alert">
             <strong>카메라 권한이 필요해요</strong>
@@ -198,7 +279,7 @@ export default function Step2Camera({ onNext, capturedPhotos, setCapturedPhotos,
             maxHeight: '100%', 
             aspectRatio: '246 / 366',
             objectFit: 'cover', 
-            transform: settings.mirror ? 'scaleX(-1)' : 'none',
+            transform: `scale(${cameraZoom}) ${settings.mirror ? 'scaleX(-1)' : ''}`,
             filter: settings.filter ? 'contrast(1.1) brightness(1.1)' : 'none'
           }}
         />
