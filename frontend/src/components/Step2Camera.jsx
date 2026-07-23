@@ -235,19 +235,18 @@ export default function Step2Camera({ onNext, capturedPhotos, setCapturedPhotos,
         {countdown !== null && (
           <motion.div
             key={countdown}
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.3 }}
             style={{
               position: 'absolute',
-              left: '50%',
-              transform: 'translateX(-50%)',
-              top: '25px',
+              inset: 0,
               color: '#fff',
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
+              justifyContent: 'center',
               textShadow: '0 2px 10px rgba(0,0,0,0.5)',
               pointerEvents: 'none',
               zIndex: 100,
