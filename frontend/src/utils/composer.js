@@ -15,6 +15,13 @@ export const FRAME_OPTIONS = [
     preview: '/frames/frame_0002_button.png',
     src: '/frames/frame_0002.png',
   },
+  {
+    id: 'frame0003',
+    name: 'FRAME 0003',
+    color: '#ffffff',
+    preview: '/frames/frame_0003_button.png',
+    src: '/frames/frame_0003.png',
+  },
 ];
 
 export const FILTER_OPTIONS = [
