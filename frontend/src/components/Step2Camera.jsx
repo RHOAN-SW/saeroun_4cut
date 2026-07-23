@@ -1,15 +1,38 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const IPAD_STANDARD_FRONT_ZOOM = 1.4;
-
-const isIPad = () => (
-  /iPad/i.test(navigator.userAgent)
-  || (/Macintosh/i.test(navigator.userAgent) && navigator.maxTouchPoints > 1)
-);
+const IPAD_DEFAULT_FRONT_ZOOM = 2;
 
 const isFrontCamera = (label = '') => /front|facetime|user|전면/i.test(label);
 const isUltraWideCamera = (label = '') => /ultra[\s-]?wide|초광각|0\.5x/i.test(label);
+
+const applyDefaultFrontFraming = async (track) => {
+  const capabilities = track?.getCapabilities?.();
+  const zoomRange = capabilities?.zoom;
+  const supportedConstraints = navigator.mediaDevices.getSupportedConstraints?.() || {};
+
+  if (!zoomRange && !supportedConstraints.zoom) return false;
+
+  const targetZoom = zoomRange
+    ? Math.min(
+        zoomRange.max,
+        Math.max(zoomRange.min, IPAD_DEFAULT_FRONT_ZOOM),
+      )
+    : IPAD_DEFAULT_FRONT_ZOOM;
+
+  try {
+    await track.applyConstraints({
+      advanced: [{ zoom: targetZoom }],
+    });
+    const appliedZoom = track.getSettings?.().zoom;
+    return typeof appliedZoom === 'number'
+      ? Math.abs(appliedZoom - targetZoom) < 0.05
+      : true;
+  } catch (error) {
+    console.warn('Front camera framing is not supported by this Safari version.', error);
+    return false;
+  }
+};
 
 export default function Step2Camera({ onNext, capturedPhotos, setCapturedPhotos, settings, onBack }) {
   const videoRef = useRef(null);
@@ -19,8 +42,6 @@ export default function Step2Camera({ onNext, capturedPhotos, setCapturedPhotos,
   const [isFlashing, setIsFlashing] = useState(false);
   const [isCapturing, setIsCapturing] = useState(false);
   const [cameraError, setCameraError] = useState('');
-  const [cameraZoom, setCameraZoom] = useState(1);
-  const cameraZoomRef = useRef(1);
   const mountedRef = useRef(true);
   
   const currentSlot = capturedPhotos.findIndex(p => p === null);
@@ -35,6 +56,7 @@ export default function Step2Camera({ onNext, capturedPhotos, setCapturedPhotos,
       width: { ideal: 1280 },
       height: { ideal: 960 },
       aspectRatio: { ideal: 4 / 3 },
+      zoom: { ideal: IPAD_DEFAULT_FRONT_ZOOM },
     };
 
     const startFrontCamera = async () => {
@@ -73,18 +95,9 @@ export default function Step2Camera({ onNext, capturedPhotos, setCapturedPhotos,
           return;
         }
 
-        const selectedLabel = mediaStream.getVideoTracks()[0]?.label || '';
-        const hasSeparateStandardAndUltraWide = (
-          frontCameras.some(device => isUltraWideCamera(device.label))
-          && frontCameras.some(device => !isUltraWideCamera(device.label))
-        );
-        const zoom = isIPad()
-          && (isUltraWideCamera(selectedLabel) || !hasSeparateStandardAndUltraWide)
-          ? IPAD_STANDARD_FRONT_ZOOM
-          : 1;
-
-        cameraZoomRef.current = zoom;
-        setCameraZoom(zoom);
+        // iPad Air 5 exposes one 122° front sensor. Ask the camera track itself
+        // for the same tighter framing used by the native Camera app.
+        await applyDefaultFrontFraming(mediaStream.getVideoTracks()[0]);
         setStream(mediaStream);
 
         if (videoRef.current) {
@@ -145,11 +158,6 @@ export default function Step2Camera({ onNext, capturedPhotos, setCapturedPhotos,
       const ctx = canvas.getContext('2d');
       canvas.width = video.videoWidth || 1280;
       canvas.height = video.videoHeight || 960;
-      const zoom = cameraZoomRef.current;
-      const sourceWidth = (video.videoWidth || canvas.width) / zoom;
-      const sourceHeight = (video.videoHeight || canvas.height) / zoom;
-      const sourceX = ((video.videoWidth || canvas.width) - sourceWidth) / 2;
-      const sourceY = ((video.videoHeight || canvas.height) - sourceHeight) / 2;
 
       ctx.save();
       if (settings.mirror) {
@@ -161,17 +169,7 @@ export default function Step2Camera({ onNext, capturedPhotos, setCapturedPhotos,
         ctx.filter = 'contrast(1.1) brightness(1.1)';
       }
 
-      ctx.drawImage(
-        video,
-        sourceX,
-        sourceY,
-        sourceWidth,
-        sourceHeight,
-        0,
-        0,
-        canvas.width,
-        canvas.height,
-      );
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
       ctx.restore();
 
       const imageData = canvas.toDataURL('image/jpeg', 0.92);
@@ -279,7 +277,7 @@ export default function Step2Camera({ onNext, capturedPhotos, setCapturedPhotos,
             maxHeight: '100%', 
             aspectRatio: '246 / 366',
             objectFit: 'cover', 
-            transform: `scale(${cameraZoom}) ${settings.mirror ? 'scaleX(-1)' : ''}`,
+            transform: settings.mirror ? 'scaleX(-1)' : 'none',
             filter: settings.filter ? 'contrast(1.1) brightness(1.1)' : 'none'
           }}
         />
