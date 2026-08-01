@@ -3,25 +3,18 @@
 export const FRAME_OPTIONS = [
   {
     id: 'frame0001',
-    name: 'FRAME 0001',
+    name: '기본 프레임',
     color: '#ffffff',
-    preview: '/frames/frame_0001_button.png',
+    preview: '/frames/frame_0001.png',
     src: '/frames/frame_0001.png',
   },
   {
-    id: 'frame0002',
-    name: 'FRAME 0002',
+    id: 'frame0001_circle',
+    name: '둥근 프레임',
     color: '#ffffff',
-    preview: '/frames/frame_0002_button.png',
-    src: '/frames/frame_0002.png',
-  },
-  {
-    id: 'frame0003',
-    name: 'FRAME 0003',
-    color: '#ffffff',
-    preview: '/frames/frame_0003_button.png',
-    src: '/frames/frame_0003.png',
-  },
+    preview: '/frames/frame_0001_circle.png',
+    src: '/frames/frame_0001_circle.png',
+  }
 ];
 
 export const FILTER_OPTIONS = [
