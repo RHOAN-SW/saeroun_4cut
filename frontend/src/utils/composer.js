@@ -5,15 +5,8 @@ export const FRAME_OPTIONS = [
     id: 'frame0001',
     name: '기본 프레임',
     color: '#ffffff',
-    preview: '/frames/frame_0001.png',
-    src: '/frames/frame_0001.png',
-  },
-  {
-    id: 'frame0001_circle',
-    name: '둥근 프레임',
-    color: '#ffffff',
     preview: '/frames/frame_0001_circle.png',
-    src: '/frames/frame_0001_circle.png',
+    src: '/frames/frame_0001.png',
   }
 ];
 
