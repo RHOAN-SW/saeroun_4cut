@@ -15,31 +15,6 @@ const ActionCard = styled.div`
   }
 `;
 
-const PrintHeading = styled.div`
-  margin-bottom: 16px;
-
-  strong {
-    display: block;
-    color: ${({ theme }) => theme.colors.text};
-    font-size: 20px;
-    line-height: 1.35;
-  }
-
-  span {
-    display: block;
-    margin-top: 6px;
-    color: ${({ theme }) => theme.colors.secondaryText};
-    font-size: 13px;
-    line-height: 1.5;
-  }
-
-  @media (max-height: 760px) {
-    margin-bottom: 10px;
-    strong { font-size: 17px; }
-    span { margin-top: 3px; font-size: 11px; line-height: 1.35; }
-  }
-`;
-
 const ActionStack = styled.div`
   display: flex;
   flex-direction: column;
@@ -58,11 +33,7 @@ const ActionButton = styled.button`
   padding: 16px 18px;
   border: 0;
   border-radius: 14px;
-  background: ${({ $tone, theme }) => (
-    $tone === 'print' ? theme.colors.accent
-      : $tone === 'dark' ? theme.colors.primary
-        : theme.colors.soft
-  )};
+  background: ${({ $tone, theme }) => ($tone === 'dark' ? theme.colors.primary : theme.colors.soft)};
   color: ${({ $tone, theme }) => ($tone === 'soft' ? theme.colors.text : '#fff')};
   font: inherit;
   font-size: 16px;
@@ -95,68 +66,6 @@ const ActionButton = styled.button`
   }
 `;
 
-const PrintModalBackdrop = styled.div`
-  position: fixed;
-  inset: 0;
-  z-index: 200;
-  display: grid;
-  place-items: center;
-  padding: 24px;
-  background: rgba(0, 0, 0, 0.5);
-`;
-
-const PrintModal = styled.section`
-  width: min(520px, 100%);
-  max-height: calc(100dvh - 48px);
-  overflow-y: auto;
-  padding: 24px;
-  border-radius: 8px;
-  background: #fff;
-
-  h2 {
-    margin: 0;
-    color: #191f28;
-    font-size: 24px;
-    line-height: 1.35;
-  }
-
-  p {
-    margin: 8px 0 20px;
-    color: #6b7684;
-    font-size: 14px;
-    line-height: 1.55;
-  }
-`;
-
-const PrintModalPhoto = styled.div`
-  display: grid;
-  place-items: center;
-  padding: 18px;
-  background: #f2f4f6;
-
-  img {
-    display: block;
-    width: auto;
-    max-width: 100%;
-    max-height: 50dvh;
-    aspect-ratio: 9 / 16;
-    object-fit: contain;
-  }
-`;
-
-const PrintModalActions = styled.div`
-  display: grid;
-  grid-template-columns: 1fr 2fr;
-  gap: 10px;
-  margin-top: 18px;
-`;
-
-const PrintIcon = () => (
-  <svg width="21" height="21" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-    <path d="M7 8V3h10v5M7 17H5a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2M7 14h10v7H7v-7Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-  </svg>
-);
-
 const makeFileName = () => {
   const stamp = new Date().toISOString().replace(/[:.]/g, '-');
   return `jr-fourcut-${stamp}.jpg`;
@@ -178,8 +87,6 @@ export default function Step3Preview({ photos, frameId, filterId, onRetake, onNe
   const [isComposing, setIsComposing] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
-  const [isPrinting, setIsPrinting] = useState(false);
-  const [printImageUrl, setPrintImageUrl] = useState('');
   const [notice, setNotice] = useState('');
 
   const selectedPhotos = useMemo(
@@ -235,15 +142,6 @@ export default function Step3Preview({ photos, frameId, filterId, onRetake, onNe
     runCompose().catch(() => active && setNotice('미리보기를 만들지 못했어요. 다시 촬영해주세요.'));
     return () => { active = false; };
   }, [archiveComposite, archiveKey, selectedPhotos, frameId, filterId]);
-
-  useEffect(() => {
-    if (!printImageUrl) return undefined;
-    const closeOnEscape = event => {
-      if (event.key === 'Escape' && !isPrinting) setPrintImageUrl('');
-    };
-    window.addEventListener('keydown', closeOnEscape);
-    return () => window.removeEventListener('keydown', closeOnEscape);
-  }, [printImageUrl, isPrinting]);
 
   const togglePhoto = (index) => {
     setNotice('');
@@ -311,70 +209,8 @@ export default function Step3Preview({ photos, frameId, filterId, onRetake, onNe
     }
   };
 
-  const handlePrint = () => {
-    if (!canvasRef.current || isComposing || isPrinting || selectedPhotos.length !== 4) return;
-    setNotice('');
-    setPrintImageUrl(canvasRef.current.toDataURL('image/jpeg', 0.98));
-  };
-
-  const confirmPrint = () => {
-    setIsPrinting(true);
-    setNotice('AirPrint 창에서 Canon SELPHY CP1500을 선택해주세요.');
-    window.print();
-    setIsPrinting(false);
-  };
-
   return (
     <div className="result-screen">
-      <style>{`
-        @page { size: 4in 6in; margin: 0; }
-        @media print {
-          body * { visibility: hidden !important; }
-          #print-photo, #print-photo * { visibility: visible !important; }
-          #print-photo {
-            position: fixed;
-            inset: 0;
-            display: grid;
-            place-items: center;
-            width: 4in;
-            height: 6in;
-            padding: 0;
-            background: #fff;
-          }
-          #print-photo img {
-            width: 3.375in;
-            height: 6in;
-            max-width: none;
-            max-height: none;
-            object-fit: contain;
-          }
-        }
-      `}</style>
-
-      {printImageUrl && (
-        <PrintModalBackdrop
-          role="presentation"
-          onMouseDown={event => {
-            if (event.target === event.currentTarget && !isPrinting) setPrintImageUrl('');
-          }}
-        >
-          <PrintModal role="dialog" aria-modal="true" aria-labelledby="print-modal-title">
-            <h2 id="print-modal-title">사진을 인화할까요?</h2>
-            <p>미리보기를 확인한 뒤 AirPrint에서 Canon SELPHY CP1500을 선택해주세요.</p>
-            <PrintModalPhoto id="print-photo">
-              <img src={printImageUrl} alt="인쇄할 네컷 사진 미리보기" />
-            </PrintModalPhoto>
-            <PrintModalActions>
-              <ActionButton $tone="soft" onClick={() => setPrintImageUrl('')} disabled={isPrinting}>취소</ActionButton>
-              <ActionButton $tone="print" onClick={confirmPrint} disabled={isPrinting}>
-                <PrintIcon />
-                {isPrinting ? '인쇄 준비 중...' : 'AirPrint 열기'}
-              </ActionButton>
-            </PrintModalActions>
-          </PrintModal>
-        </PrintModalBackdrop>
-      )}
-
       <div className="topbar">
         <button className="back-btn" onClick={onRetake} aria-label="다시 촬영하기">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -420,23 +256,15 @@ export default function Step3Preview({ photos, frameId, filterId, onRetake, onNe
         )}
 
         <ActionCard>
-          <PrintHeading>
-            <strong>바로 인화할까요?</strong>
-            <span>CP1500과 같은 Wi-Fi에 연결한 뒤 AirPrint에서 프린터를 선택해주세요.</span>
-          </PrintHeading>
           <ActionStack>
-          <ActionButton $tone="print" onClick={handlePrint} disabled={isComposing || isSaving || isUploading || isPrinting || selectedPhotos.length !== 4}>
-            <PrintIcon />
-            {isPrinting ? '인쇄 화면 여는 중...' : 'CP1500으로 출력'}
-          </ActionButton>
-          <ActionButton $tone="dark" onClick={handleCreateQr} disabled={isComposing || isSaving || isUploading || isPrinting || selectedPhotos.length !== 4}>
+          <ActionButton $tone="dark" onClick={handleCreateQr} disabled={isComposing || isSaving || isUploading || selectedPhotos.length !== 4}>
             {isUploading ? 'QR 만드는 중...' : 'QR 다운로드 만들기'}
           </ActionButton>
-          <ActionButton $tone="soft" onClick={handleSave} disabled={isComposing || isSaving || isUploading || isPrinting || selectedPhotos.length !== 4}>
+          <ActionButton $tone="soft" onClick={handleSave} disabled={isComposing || isSaving || isUploading || selectedPhotos.length !== 4}>
             {isSaving ? '저장 준비 중...' : '이 iPad에 바로 저장'}
           </ActionButton>
-          <ActionButton $tone="soft" onClick={onRetake} disabled={isSaving || isUploading || isPrinting}>다시 촬영하기</ActionButton>
-          <button className="text-button" onClick={onNewSession} disabled={isSaving || isUploading || isPrinting}>처음으로</button>
+          <ActionButton $tone="soft" onClick={onRetake} disabled={isSaving || isUploading}>다시 촬영하기</ActionButton>
+          <button className="text-button" onClick={onNewSession} disabled={isSaving || isUploading}>처음으로</button>
           {notice && <p className="save-notice" role="status">{notice}</p>}
           </ActionStack>
         </ActionCard>
