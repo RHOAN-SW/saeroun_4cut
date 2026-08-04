@@ -39,6 +39,11 @@ export const LAYOUT = {
   backgroundColor: '#ffffff'
 };
 
+// The frame artwork is scaled from 1080x1920 to the composition canvas.
+// Draw photos slightly past each transparent opening so sub-pixel scaling
+// cannot reveal the white canvas along the opening edges.
+const PHOTO_BLEED = 3;
+
 function loadImage(src) {
   return new Promise((resolve, reject) => {
     const img = new Image();
@@ -104,7 +109,15 @@ export async function compose(canvas, photos, frameId = 'frame0001', filterId = 
     const area = areas[i];
     if (photoImages[i]) {
       ctx.filter = FILTER_MAP[filterId] || 'none';
-      drawImageCover(ctx, photoImages[i], area.x, area.y, area.width, area.height, LAYOUT.borderRadius);
+      drawImageCover(
+        ctx,
+        photoImages[i],
+        area.x - PHOTO_BLEED,
+        area.y - PHOTO_BLEED,
+        area.width + PHOTO_BLEED * 2,
+        area.height + PHOTO_BLEED * 2,
+        LAYOUT.borderRadius,
+      );
       ctx.filter = 'none';
     } else {
       ctx.fillStyle = '#e0e0e0';
