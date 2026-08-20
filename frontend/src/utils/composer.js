@@ -7,6 +7,13 @@ export const FRAME_OPTIONS = [
     color: '#ffffff',
     preview: '/frames/frame_0001_circle.png',
     src: '/frames/frame_0001.png',
+  },
+  {
+    id: 'frame0002',
+    name: '프레임 2',
+    color: '#ffffff',
+    preview: '/frames/frame_0002_circle.png',
+    src: '/frames/frame_0002.png',
   }
 ];
 
